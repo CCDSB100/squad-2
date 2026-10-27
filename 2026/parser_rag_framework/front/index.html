@@ -1,0 +1,2613 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vetorização Cientométrica — Squad 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --verde:#1E5B31; --verde-escuro:#164523; --verde-claro:#E8F1EA;
+    --laranja:#F59E0B; --laranja-bg:#FFF7E8; --azul:#1E88E5;
+    --vermelho:#E53935; --cinza:#5f6368; --cinza-bg:#F7F8FA; --borda:#E5E7EB;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Roboto',Arial,sans-serif;}
+  html,body{height:100%;}
+  body{background:var(--cinza-bg);color:#1a1a1a;display:flex;height:100vh;overflow:hidden;}
+
+  /* SIDEBAR */
+  .sidebar{position:relative;width:230px;background:#fff;border-right:1px solid var(--borda);display:flex;flex-direction:column;flex-shrink:0;transition:width .22s ease,margin .22s ease;overflow:hidden;}
+  .sb-brand{display:flex;align-items:center;gap:10px;padding:18px;border-bottom:1px solid var(--borda);}
+  .sb-logo{width:34px;height:34px;border-radius:9px;background:var(--verde);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .sb-brand-txt{flex:1;min-width:0;}
+  .sb-brand b{font-size:14px;color:var(--verde);line-height:1.15;display:block;}
+  .sb-brand small{font-size:10px;letter-spacing:.5px;color:var(--laranja);font-weight:700;}
+  .sb-collapse,.topbar-expand{width:30px;height:30px;border:1px solid var(--borda);border-radius:8px;background:#fff;color:#555;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+  .sb-collapse:hover,.topbar-expand:hover{background:var(--cinza-bg);color:var(--verde);}
+  .topbar-expand{display:none;}
+  body.collapsed .sidebar{width:0;margin-left:-1px;border-right:none;}
+  body.collapsed .topbar-expand{display:flex;}
+  .sb-nav{padding:12px 10px;flex:1;}
+  .sb-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;font-size:13.5px;font-weight:500;color:#333;cursor:pointer;margin-bottom:3px;}
+  .sb-item:hover{background:var(--cinza-bg);}
+  .sb-item.ativo{background:var(--verde-claro);color:var(--verde);font-weight:700;}
+  .sb-item.desativado{opacity:.5;cursor:default;}
+  .sb-item.desativado:hover{background:transparent;}
+  .sb-item svg{width:17px;height:17px;flex-shrink:0;}
+  .sb-plan{margin:12px;padding:14px;border:1px solid var(--borda);border-radius:12px;}
+  .sb-plan .barra{height:6px;background:#eee;border-radius:4px;overflow:hidden;margin-top:8px;}
+  .sb-plan .barra span{display:block;height:100%;width:0;background:var(--verde);}
+  .sb-plan small{font-size:11px;color:var(--cinza);}
+  .hero-topo{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .home-hero{cursor:pointer;transition:padding .18s ease;}
+  .home-hero.recolhido{padding-top:14px;padding-bottom:14px;}
+  .home-hero.recolhido #hero-desc,.home-hero.recolhido #hero-badges{display:none;}
+  .home-hero.recolhido #hero-seta{transform:rotate(-90deg);}
+  .home-hero.recolhido h2{font-size:16px;margin:0;}
+  .hero-resumo{display:none;gap:18px;flex-wrap:wrap;font-size:13px;opacity:.95;margin-top:9px;}
+  .home-hero.recolhido .hero-resumo{display:flex;}
+  .hero-resumo b{font-size:15px;}
+  .lista-topo .acoes{flex-basis:100%;justify-content:flex-start;gap:12px;}
+  #sel-info{min-width:132px;display:inline-block;}
+  .btn-vet-lista{padding:8px 16px;border:none;border-radius:9px;background:var(--verde);
+    color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;
+    display:inline-flex;align-items:center;gap:7px;}
+  .btn-vet-lista:disabled{background:#e3e3e3;color:#9b9b9b;cursor:default;}
+  /* ── envio de extração pronta ── */
+  .up-card{background:#fff;border:1px solid var(--borda);border-radius:14px;padding:22px 24px;margin-bottom:22px;}
+  .up-card h3{font-size:15px;margin-bottom:4px;}
+  .up-sub{font-size:12.5px;color:var(--cinza);line-height:1.6;margin-bottom:16px;}
+  .up-passos{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px;}
+  .up-passo{border:1px solid var(--borda);border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.55;background:var(--cinza-bg);}
+  .up-passo b{display:block;font-size:12px;color:var(--verde);margin-bottom:3px;letter-spacing:.3px;}
+  .up-passo code{font-size:11.5px;background:#fff;padding:1px 4px;border-radius:4px;border:1px solid var(--borda);}
+  .up-btn{padding:8px 14px;border:none;border-radius:8px;background:var(--verde);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;}
+  .up-btn.sec{background:#fff;color:var(--verde);border:1px solid var(--verde);}
+  .up-btn:disabled{background:#e3e3e3;color:#9b9b9b;border-color:#e3e3e3;cursor:default;}
+  .up-zona{border:2px dashed var(--borda);border-radius:12px;padding:26px;text-align:center;font-size:13px;color:var(--cinza);cursor:pointer;transition:border-color .15s,background .15s;}
+  .up-zona:hover,.up-zona.sobre{border-color:var(--verde);background:var(--verde-claro);}
+  .up-zona b{color:#1a1a1a;}
+  .up-tab{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:14px;}
+  .up-tab th{text-align:left;font-weight:600;color:var(--cinza);padding:6px 8px;border-bottom:1px solid var(--borda);}
+  .up-tab td{padding:7px 8px;border-bottom:1px solid #f0f0f0;vertical-align:top;}
+  .up-st{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;}
+  .up-st.novo{background:#e8f5ec;color:#1E5B31;}
+  .up-st.ja_extraido{background:#fff7e8;color:#9a5b00;}
+  .up-st.desconhecido,.up-st.invalido,.up-st.erro{background:#fdecec;color:#b42318;}
+  .up-st.gravado{background:#1E5B31;color:#fff;}
+  .vet-barra{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+  .vet-barra select,.vet-barra input{padding:7px 9px;border:1px solid var(--borda);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;}
+  .vet-barra select{min-width:260px;font-weight:600;}
+  .vet-metodos{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px;}
+  .vet-metodo{border:1px solid var(--borda);border-radius:12px;padding:14px 16px;}
+  .vet-metodo h4{font-size:13px;margin-bottom:4px;}
+  .vet-chip{display:inline-block;padding:1px 7px;border-radius:9px;font-size:10.5px;font-weight:700;margin-left:4px;background:#eef2ff;color:#3730a3;}
+  .vet-tab-wrap{max-height:460px;overflow:auto;border:1px solid var(--borda);border-radius:10px;margin-top:10px;}
+  .vet-tab-wrap .up-tab{margin-top:0;}
+  .vet-tab-wrap thead th{position:sticky;top:0;background:#fff;z-index:1;}
+  .up-st.ja_vetorizado{background:#fff7e8;color:#9a5b00;}
+  .up-st.nao{background:var(--cinza-bg);color:var(--cinza);}
+  .up-st.legado{background:#eef2ff;color:#3730a3;}
+  .up-acoes{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:12.5px;}
+  .busca-faixa{display:flex;align-items:center;gap:14px;margin:0 0 26px;}
+  .busca-wrap{display:flex;align-items:center;gap:10px;border:1.5px solid var(--borda);border-radius:11px;
+    padding:11px 15px;background:#fff;color:var(--cinza);flex:1;max-width:620px;
+    box-shadow:0 1px 3px rgba(0,0,0,.05);transition:border-color .15s,box-shadow .15s;}
+  .busca-wrap:hover{border-color:#c9c9c9;}
+  .busca-wrap input{border:none;outline:none;font-size:14px;font-family:inherit;flex:1;min-width:0;
+    background:transparent;color:#1a1a1a;}
+  .busca-wrap input::placeholder{color:#9b9b9b;}
+  .busca-wrap:focus-within{border-color:var(--verde);box-shadow:0 0 0 3px var(--verde-claro);}
+  .busca-wrap:focus-within svg{color:var(--verde);}
+  #busca-x{border:none;background:transparent;color:var(--cinza);cursor:pointer;font-size:13px;padding:0 2px;display:none;}
+  #busca-x:hover{color:#1a1a1a;}
+  #busca-info{font-size:12.5px;color:var(--cinza);white-space:nowrap;}
+  .paginacao{display:flex;align-items:center;justify-content:center;gap:14px;padding:6px 0 26px;font-size:12.5px;color:var(--cinza);}
+  .btn-mais{padding:9px 22px;border:1px solid var(--borda);border-radius:22px;background:#fff;
+    font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+  .btn-mais:hover{background:var(--cinza-bg);}
+  .rodape{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    padding:18px 2px 30px;border-top:1px solid var(--borda);font-size:12px;color:var(--cinza);}
+  .rodape-marca b{color:var(--verde);font-size:13px;letter-spacing:.4px;}
+  .sb-user{padding:14px 18px;border-top:1px solid var(--borda);display:flex;align-items:center;gap:10px;}
+  .sb-user .av{width:30px;height:30px;border-radius:50%;background:var(--laranja);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
+  .sb-user div{font-size:12px;line-height:1.3;}
+  .sb-user small{color:var(--cinza);font-size:10.5px;}
+
+  /* ÁREA PRINCIPAL */
+  .conteudo{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .topbar{height:56px;background:#fff;border-bottom:1px solid var(--borda);display:flex;align-items:center;gap:14px;padding:0 22px;flex-shrink:0;}
+  .topbar .tit{font-size:15px;font-weight:700;}
+  .topbar .sp{flex:1;}
+  .topbar .btn-top{font-size:12.5px;font-weight:500;color:#333;padding:7px 14px;border:1px solid var(--borda);border-radius:8px;background:#fff;cursor:pointer;}
+
+  /* HOME */
+  .home{flex:1;overflow-y:auto;padding:30px 34px;}
+  .home-hero{background:linear-gradient(120deg,var(--verde),#2d7a45);border-radius:18px;padding:26px 30px;color:#fff;position:relative;overflow:hidden;margin-bottom:26px;}
+  .home-hero::after{content:"";position:absolute;right:-80px;top:-120px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,.06);}
+  .home-hero h2{font-size:26px;font-weight:700;position:relative;}
+  .home-hero p{font-size:14px;opacity:.9;margin-top:6px;max-width:600px;position:relative;}
+  .home-badges{display:flex;gap:26px;margin-top:20px;position:relative;}
+  .home-badge .n{font-size:clamp(20px,2.2vw,30px);font-size:32px;font-weight:700;line-height:1;}
+  .home-badge .l{font-size:11px;letter-spacing:.6px;opacity:.85;text-transform:uppercase;margin-top:4px;}
+
+  .lista-topo{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;flex-wrap:wrap;}
+  .filtros{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .filtro-lbl{font-size:12px;color:var(--cinza);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-right:2px;}
+  .filtro{font-size:12.5px;font-weight:500;color:#333;background:#fff;border:1px solid var(--borda);padding:7px 14px;border-radius:20px;cursor:pointer;transition:all .15s;}
+  .filtro:hover{border-color:var(--verde);}
+  .filtro.ativo{background:var(--verde);color:#fff;border-color:var(--verde);font-weight:700;}
+  .acoes{display:flex;align-items:center;gap:14px;}
+  .sel-info{font-size:12.5px;color:var(--cinza);}
+  .btn-parser{display:flex;align-items:center;gap:8px;background:var(--laranja);color:#fff;border:none;font-size:13px;font-weight:700;padding:10px 20px;border-radius:24px;cursor:pointer;transition:all .15s;}
+  .btn-parser:hover:not(:disabled){background:#d98905;}
+  .btn-parser:disabled{background:#e5e7eb;color:#9aa0a6;cursor:not-allowed;}
+
+  .lista-head{display:grid;grid-template-columns:170px 1fr 220px 96px;align-items:center;gap:14px;padding:8px 16px;font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--cinza);}
+  .lista-head .chkall{display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:11.5px;cursor:pointer;}
+  .lh-stat{text-align:center;}
+  .lista{display:flex;flex-direction:column;gap:8px;padding-bottom:36px;}
+  .linha{display:grid;grid-template-columns:170px 1fr 220px 96px;align-items:center;gap:14px;background:#fff;border:1px solid var(--borda);border-radius:12px;padding:14px 16px;transition:all .15s;}
+  .linha:hover{border-color:#cdd3da;box-shadow:0 2px 10px rgba(0,0,0,.04);}
+  .linha.sel{border-color:var(--verde);background:#F6FBF7;}
+  .linha.analisando{border-color:var(--laranja);background:var(--laranja-bg);}
+  .linha-esq{display:flex;align-items:center;gap:12px;}
+  .linha-esq input{width:16px;height:16px;cursor:pointer;flex-shrink:0;accent-color:var(--verde);}
+  .linha-ico{width:36px;height:36px;border-radius:8px;background:#FDECEA;color:var(--vermelho);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .linha-tit{font-size:13px;font-weight:700;line-height:1.3;}
+  .linha-meta{font-size:11.5px;color:var(--cinza);margin-top:3px;line-height:1.4;}
+  .linha-meta .cat{display:inline-block;background:var(--laranja-bg);color:#B45309;font-weight:700;padding:1px 8px;border-radius:5px;font-size:10.5px;}
+  .linha-meta code{font-family:'Roboto Mono',monospace;font-size:10.5px;color:#444;}
+  .linha-descoberto{font-size:11px;color:var(--verde);margin-top:6px;font-weight:500;display:none;}
+  .linha-descoberto.on{display:block;}
+  .linha-descoberto b{font-weight:700;}
+  .stages{display:flex;align-items:center;justify-content:center;gap:6px;}
+  .stg{display:flex;flex-direction:column;align-items:center;gap:3px;width:60px;}
+  .stg .ico{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#eef0f2;color:#b6bbc2;transition:all .2s;}
+  .stg .txt{font-size:8.5px;font-weight:700;letter-spacing:.2px;text-transform:uppercase;color:#b6bbc2;text-align:center;line-height:1.1;}
+  .stg.on .ico{background:var(--verde-claro);color:var(--verde);}
+  .stg.on .txt{color:var(--verde);}
+  .stg.on.s3 .ico{background:#e3f0fc;color:var(--azul);}
+  .stg.on.s3 .txt{color:var(--azul);}
+  .stg.loading .ico{background:var(--laranja-bg);color:var(--laranja);}
+  .stg-seta{color:#d5d9de;font-size:12px;}
+  .spin-sm{width:14px;height:14px;border:2.5px solid #f1d9a8;border-top-color:var(--laranja);border-radius:50%;animation:girar .7s linear infinite;}
+  .linha-acao{text-align:right;}
+  .btn-abrir{font-size:12px;font-weight:700;color:var(--verde);background:var(--verde-claro);border:none;padding:8px 14px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+  .btn-abrir:hover:not(:disabled){background:#d6e8db;}
+  .btn-abrir:disabled{background:#f1f2f4;color:#b6bbc2;cursor:not-allowed;}
+  /* toggle lista/grade + miniatura */
+  .view-toggle{display:flex;gap:3px;background:#fff;border:1px solid var(--borda);border-radius:9px;padding:2px;}
+  .view-toggle .vbtn{border:none;background:transparent;width:32px;height:28px;border-radius:7px;cursor:pointer;color:#9aa0a6;display:flex;align-items:center;justify-content:center;}
+  .view-toggle .vbtn.ativo{background:var(--verde-claro);color:var(--verde);}
+  .grade-mode .lista-head{display:none;}
+  .linha-thumb{width:54px;height:72px;border-radius:6px;overflow:hidden;background:#f1f2f4;border:1px solid var(--borda);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--vermelho);}
+  .linha-thumb img{width:100%;height:100%;object-fit:cover;object-position:top;}
+  .lista.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+  .card-g{background:#fff;border:1px solid var(--borda);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:all .15s;}
+  .card-g:hover{border-color:#cdd3da;box-shadow:0 6px 18px rgba(0,0,0,.08);transform:translateY(-2px);}
+  .card-g.sel{border-color:var(--verde);}
+  .card-g-thumb{position:relative;height:186px;background:#f1f2f4;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--borda);color:var(--vermelho);}
+  .card-g-thumb img{width:100%;height:100%;object-fit:cover;object-position:top;}
+  .card-g-chk{position:absolute;top:8px;left:8px;width:18px;height:18px;accent-color:var(--verde);cursor:pointer;}
+  .card-g-body{padding:12px 14px;display:flex;flex-direction:column;gap:8px;flex:1;}
+  .card-g-meta{font-size:11px;color:var(--cinza);line-height:1.4;}
+  .card-g-chips{display:flex;flex-wrap:wrap;gap:5px;}
+  .mini-chip{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--cinza-bg);color:#555;}
+  .mini-chip.cat{background:var(--laranja-bg);color:#B45309;}
+  .mini-chip.ok{background:var(--verde-claro);color:var(--verde);}
+  .mini-chip.vet{background:#e3f0fc;color:var(--azul);}
+  .card-g-body .btn-abrir{margin-top:auto;justify-content:center;}
+
+
+  /* EXTRACT */
+  .extract{flex:1;display:none;flex-direction:column;min-height:0;}
+  .ex-toolbar{height:48px;background:#fff;border-bottom:1px solid var(--borda);display:flex;align-items:center;gap:14px;padding:0 18px;flex-shrink:0;font-size:12.5px;}
+  .ex-back{display:flex;align-items:center;gap:6px;color:var(--verde);font-weight:700;cursor:pointer;}
+  .ex-file{display:flex;align-items:center;gap:7px;color:#333;font-weight:500;background:var(--cinza-bg);padding:6px 12px;border-radius:8px;}
+  .ex-nav{display:flex;align-items:center;gap:8px;color:var(--cinza);}
+  .ex-nav button{width:24px;height:24px;border:1px solid var(--borda);border-radius:6px;background:#fff;cursor:pointer;color:#333;}
+  .ex-nav button:disabled{opacity:.4;cursor:default;}
+  .ex-page-inp{width:32px;text-align:center;border:1px solid var(--borda);border-radius:5px;background:#fff;color:#333;font-size:12px;padding:3px 2px;font-variant-numeric:tabular-nums;}
+  .ex-page-inp:focus{outline:2px solid var(--verde);outline-offset:1px;}
+
+  .painel-overlay{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:24px;}
+  .painel-card{background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:100%;max-width:860px;max-height:82vh;display:flex;flex-direction:column;}
+  .painel-cab{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--borda);}
+  .painel-cab b{font-size:15px;}
+  .painel-x{cursor:pointer;color:var(--cinza);font-size:16px;padding:2px 6px;}
+  .painel-corpo{overflow:auto;padding:14px 20px 20px;}
+  .log-t{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .log-t th{text-align:left;color:var(--cinza);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.4px;padding:6px 8px;border-bottom:1px solid var(--borda);position:sticky;top:0;background:#fff;}
+  .log-t td{padding:6px 8px;border-bottom:1px solid #f1f1f1;vertical-align:top;}
+  .log-ev{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:700;}
+  .cfg-l{display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px solid #f1f1f1;font-size:13px;}
+  .cfg-l span:first-child{color:var(--cinza);}
+  .mini-chip.fila{background:#fef3c7;color:#92400e;}
+  .sb-user{cursor:pointer;transition:background .12s;}
+  .sb-user:hover{background:var(--cinza-bg);}
+  .menu-conta{position:absolute;bottom:74px;left:12px;right:12px;z-index:500;background:#fff;border:1px solid var(--borda);
+    border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px;}
+  .menu-cab{padding:9px 11px 10px;border-bottom:1px solid var(--borda);margin-bottom:5px;}
+  .menu-cab b{display:block;font-size:13px;}
+  .menu-cab small{color:var(--cinza);font-size:11.5px;word-break:break-all;}
+  .menu-item{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:8px;font-size:13px;cursor:pointer;}
+  .menu-item:hover{background:var(--cinza-bg);}
+  .menu-item.perigo{color:#b91c1c;}
+  .menu-item.perigo:hover{background:#fef2f2;}
+  .menu-sep{height:1px;background:var(--borda);margin:5px 0;}
+  .cf-sec{padding:16px 0;border-bottom:1px solid var(--borda);}
+  .cf-sec:last-child{border-bottom:none;}
+  .cf-sec h4{margin:0 0 3px;font-size:13.5px;}
+  .cf-sec p{margin:0 0 11px;font-size:12px;color:var(--cinza);line-height:1.5;}
+  .cf-linha{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .cf-msg{font-size:12.5px;min-height:17px;margin-top:7px;}
+  .eq-acao{padding:5px 11px;border:1px solid var(--borda);border-radius:7px;background:#fff;font-size:12px;cursor:pointer;font-family:inherit;}
+  .eq-acao:hover{background:var(--cinza-bg);}
+  .eq-acao.perigo{color:#b91c1c;border-color:#fecaca;}
+  .eq-acao.perigo:hover{background:#fef2f2;}
+  .eq-lbl{font-size:12px;font-weight:600;color:var(--cinza);display:block;margin-bottom:3px;}
+  .eq-inp{width:100%;padding:9px 11px;border:1px solid var(--borda);border-radius:8px;box-sizing:border-box;font-size:13.5px;font-family:inherit;}
+  .eq-inp:focus{outline:2px solid var(--verde);outline-offset:1px;}
+  .eq-btn{padding:10px 18px;border:none;border-radius:9px;background:var(--verde);color:#fff;font-weight:700;cursor:pointer;font-size:13px;}
+  .eq-btn2{padding:10px 18px;border:1px solid var(--borda);border-radius:9px;background:#fff;cursor:pointer;font-size:13px;}
+  .sel-ordem{border:1px solid var(--borda);border-radius:20px;padding:5px 10px;font-size:12px;font-weight:600;background:#fff;cursor:pointer;color:#1a1a1a;font-family:inherit;}
+  .sel-ordem:focus{outline:2px solid var(--verde);outline-offset:1px;}
+  /* login (antes da home) */
+  .login-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--verde) 0%,#123c20 100%);padding:20px;}
+  .login-card{width:100%;max-width:360px;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.35);padding:34px 30px;text-align:center;}
+  .login-logo{width:52px;height:52px;margin:0 auto 12px;border-radius:14px;background:var(--verde-claro);color:var(--verde);display:flex;align-items:center;justify-content:center;}
+  .login-tit b{display:block;font-size:17px;color:#1a1a1a;line-height:1.2;}
+  .login-tit small{display:block;font-size:10.5px;font-weight:800;letter-spacing:2px;color:var(--verde);margin-top:3px;}
+  .login-sub{font-size:12.5px;color:var(--cinza);margin:14px 0 20px;}
+  .login-form{text-align:left;}
+  .login-form label{display:block;font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.4px;margin:12px 0 5px;}
+  .login-form input{width:100%;padding:11px 13px;border:1px solid var(--borda);border-radius:9px;font-size:14px;box-sizing:border-box;}
+  .login-form input:focus{outline:2px solid var(--verde);outline-offset:1px;border-color:var(--verde);}
+  .login-erro{min-height:16px;font-size:12px;color:var(--vermelho);margin-top:8px;}
+  .login-btn{width:100%;margin-top:8px;padding:12px;border:none;border-radius:10px;background:var(--verde);color:#fff;font-weight:700;font-size:14px;cursor:pointer;}
+  .login-btn:hover{background:#17492a;}
+  .login-nota{font-size:10.5px;color:var(--cinza);margin-top:18px;line-height:1.4;}
+  .ex-rota{font-size:9.5px;font-weight:700;padding:3px 10px;border-radius:12px;letter-spacing:.5px;text-transform:uppercase;display:none;}
+  .rota-chandra{background:#e3f0fc;color:#1e88e5;}
+  .rota-docling{background:var(--verde-claro);color:var(--verde);}
+  .rota-mineru{background:#f3e8fd;color:#7c3aed;}
+  .rota-marker{background:#fff1e6;color:#c2410c;}
+  .ex-split{flex:1;display:flex;min-height:0;}
+
+  .pdf-pane{flex:1.15;overflow:auto;background:#EEF0F3;padding:24px;}
+  .pdf-wrap{position:relative;max-width:620px;margin:0 auto;box-shadow:0 4px 20px rgba(0,0,0,.12);background:#fff;line-height:0;}
+  .pdf-wrap img{display:block;width:100%;height:auto;}
+  .bbox{position:absolute;border:2px solid transparent;border-radius:3px;cursor:default;transition:background .12s,border-color .12s;}
+  .bbox:hover,.bbox.hl{border-color:var(--laranja);background:rgba(245,158,11,.20);}
+  .bbox .tag{position:absolute;top:-16px;left:-2px;background:var(--laranja);color:#fff;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:1px 6px;border-radius:3px;opacity:0;white-space:nowrap;line-height:1.4;pointer-events:none;}
+  .bbox:hover .tag,.bbox.hl .tag{opacity:1;}
+
+  .res-pane{flex:1;display:flex;flex-direction:column;border-left:1px solid var(--borda);background:#fff;min-width:0;}
+  .res-tabs{display:flex;gap:4px;padding:10px 16px 0;border-bottom:1px solid var(--borda);flex-shrink:0;}
+  .res-tab{font-size:12.5px;font-weight:700;color:var(--cinza);padding:9px 14px;cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px;}
+  .res-tab.ativo{color:var(--verde);border-bottom-color:var(--verde);}
+  .res-body{flex:1;overflow-y:auto;padding:14px 18px;}
+
+  .md-block{border-left:3px solid transparent;padding:7px 12px;margin:2px 0;border-radius:0 6px 6px 0;font-family:'Roboto Mono',monospace;font-size:11.5px;line-height:1.6;color:#24292f;word-break:break-word;cursor:default;transition:all .16s;}
+  .md-block:hover,.md-block.hl{border-left-color:var(--laranja);background:var(--laranja-bg);}
+  .md-block .lbl{display:flex;align-items:center;gap:6px;font-family:'Roboto';font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#aaa;margin-bottom:3px;}
+  .md-block:hover .lbl,.md-block.hl .lbl{color:var(--laranja);}
+  .md-block .lbl .conf{color:#bbb;font-weight:500;}
+  .md-block .lbl .dica{color:#ccc;font-weight:500;text-transform:none;letter-spacing:0;font-size:9px;opacity:0;transition:opacity .15s;margin-left:auto;}
+  .md-block:hover .lbl .dica{opacity:1;}
+  .md-content{display:block;outline:none;white-space:pre-wrap;}
+  .md-block.editando{border-left-color:var(--verde);background:#fff;box-shadow:0 0 0 2px var(--verde-claro) inset;cursor:text;}
+  .md-block.editando .lbl{color:var(--verde);}
+  .md-block.editando .md-content{border:1px dashed var(--verde);border-radius:5px;padding:6px 8px;min-height:20px;}
+  .md-vazio{color:#b6bbc2;font-size:12px;text-align:center;padding:30px 0;}
+
+  .meta-grid{display:grid;grid-template-columns:auto 1fr;gap:10px 18px;font-size:12.5px;}
+  .meta-grid .k{color:var(--cinza);font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:.5px;align-self:center;}
+  .meta-grid .v{color:#1a1a1a;}
+  .meta-grid .cat{display:inline-block;background:var(--laranja-bg);color:#B45309;font-weight:700;padding:2px 9px;border-radius:6px;font-size:11px;}
+  .meta-grid code{font-family:'Roboto Mono',monospace;color:var(--verde);font-size:11.5px;}
+  .kw-wrap{display:flex;flex-wrap:wrap;gap:6px;}
+  .kw{background:var(--verde-claro);color:var(--verde);font-size:10.5px;padding:3px 10px;border-radius:20px;}
+  .meta-stats{display:flex;gap:10px;margin:20px 0;}
+  .meta-stat{flex:1;background:var(--cinza-bg);border-radius:12px;padding:14px 8px;text-align:center;}
+  .meta-stat b{font-size:22px;color:var(--verde);display:block;}
+  .meta-stat span{font-size:9.5px;letter-spacing:.4px;color:var(--cinza);text-transform:uppercase;}
+  .meta-sep{border:none;border-top:1px solid var(--borda);margin:18px 0;}
+
+  .ex-foot{border-top:1px solid var(--borda);background:#fff;padding:12px 18px;display:flex;align-items:center;gap:16px;flex-shrink:0;}
+  .btn-vet{border:none;border-radius:30px;background:var(--verde);color:#fff;font-weight:700;font-size:13px;padding:11px 22px;cursor:pointer;display:flex;align-items:center;gap:9px;letter-spacing:.3px;}
+  .btn-vet:hover:not(:disabled){background:var(--verde-escuro);}
+  .btn-vet:disabled{opacity:.5;cursor:default;}
+  .btn-vet.rodando{background:var(--laranja);}
+  .vet-live{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--cinza);flex:1;}
+  .vet-live b{color:var(--verde);font-size:15px;font-variant-numeric:tabular-nums;}
+  .vet-ok{display:none;align-items:center;gap:8px;color:var(--verde);font-weight:700;font-size:13px;}
+  .vet-ok .ck{width:22px;height:22px;border-radius:50%;background:var(--verde);color:#fff;display:flex;align-items:center;justify-content:center;}
+  .vet-ok code{background:var(--verde-claro);padding:2px 8px;border-radius:5px;font-family:'Roboto Mono',monospace;font-size:11px;}
+  .spinner{width:14px;height:14px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:girar .7s linear infinite;}
+  @keyframes girar{to{transform:rotate(360deg);}}
+
+  /* aba Legível */
+  .leg-block{padding:9px 6px;border-left:3px solid transparent;border-radius:0 6px 6px 0;margin:2px 0;transition:all .16s;}
+  .leg-block:hover,.leg-block.hl{border-left-color:var(--laranja);background:var(--laranja-bg);}
+  .leg-block .leg-tag{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#aaa;margin-bottom:5px;display:block;}
+  .leg-p{font-size:12.5px;line-height:1.6;color:#1a1a1a;text-align:justify;}
+  .leg-h{font-size:14px;font-weight:700;color:#111;}
+  .leg-cap{font-size:11px;color:#555;font-style:italic;margin-bottom:6px;}
+  .leg-tabela{overflow-x:auto;border-radius:10px;border:1px solid var(--borda);box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .leg-tabela table{border-collapse:collapse;font-size:11.5px;width:100%;background:#fff;}
+  .leg-tabela caption{caption-side:top;text-align:left;font-size:11px;font-style:italic;color:#555;padding:8px 10px;background:#fafbfc;border-bottom:1px solid var(--borda);}
+  .leg-tabela th,.leg-tabela td{border-bottom:1px solid #eceef1;padding:6px 10px;text-align:right;white-space:nowrap;}
+  .leg-tabela thead th,.leg-tabela tr:first-child th,.leg-tabela tr:first-child td{background:var(--verde-claro);color:var(--verde);font-weight:700;text-align:center;border-bottom:2px solid #bcd7c4;position:sticky;top:0;}
+  .leg-tabela tbody tr:nth-child(even) td{background:#fafbfc;}
+  .leg-tabela tbody tr:hover td{background:var(--laranja-bg);}
+  .leg-tabela td:first-child,.leg-tabela th:first-child{text-align:left;font-weight:500;}
+  .leg-formula{background:#f6f8fa;border:1px solid var(--borda);border-radius:8px;padding:16px;font-family:'Cambria','Georgia',serif;font-size:16px;text-align:center;color:#111;line-height:1.7;}
+  .leg-fig .crop{position:relative;overflow:hidden;border:1px solid var(--borda);border-radius:8px;background:#fff;margin-bottom:8px;}
+  .leg-fig .crop img{position:absolute;max-width:none;}
+  .leg-fig .desc{font-size:11.5px;color:var(--cinza);line-height:1.55;}
+
+  /* aba Código + menu ⋯ + filtros Legível + diagnostics + zoom */
+  .res-tabs{align-items:center;}
+  .res-tabs-sp{flex:1;}
+  .res-menu{position:relative;}
+  .res-menu-btn{border:none;background:transparent;color:#9aa0a6;cursor:pointer;padding:5px 9px;border-radius:7px;line-height:0;}
+  .res-menu-btn:hover{background:var(--cinza-bg);color:var(--verde);}
+  .res-menu-drop{display:none;position:absolute;right:0;top:34px;background:#fff;border:1px solid var(--borda);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);z-index:40;min-width:190px;overflow:hidden;}
+  .res-menu-drop.on{display:block;}
+  .res-menu-item{display:flex;align-items:center;gap:10px;padding:11px 14px;font-size:12.5px;color:#333;cursor:pointer;}
+  .res-menu-item:hover{background:var(--cinza-bg);color:var(--verde);}
+  .leg-filtros{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;position:sticky;top:0;background:#fff;padding-bottom:8px;z-index:5;}
+  .leg-fchip{font-size:11.5px;font-weight:700;color:#555;background:var(--cinza-bg);border:1px solid var(--borda);padding:5px 12px;border-radius:20px;cursor:pointer;}
+  .leg-fchip:hover{border-color:var(--verde);}
+  .leg-fchip.ativo{background:var(--verde);color:#fff;border-color:var(--verde);}
+  .code-topo{font-size:12px;color:var(--cinza);margin-bottom:10px;}
+  .code-block{background:#0d1117;color:#c9d1d9;font-family:'Roboto Mono',monospace;font-size:11.5px;line-height:1.65;padding:16px;border-radius:10px;overflow-x:auto;white-space:pre;}
+  #diag-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;align-items:center;justify-content:center;}
+  .diag-card{background:#fff;border-radius:16px;padding:24px;width:440px;max-width:92vw;box-shadow:0 12px 44px rgba(0,0,0,.25);}
+  .diag-card h3{font-size:17px;font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:9px;color:var(--verde);}
+  .diag-card .dsub{font-size:12px;color:var(--cinza);margin-bottom:16px;word-break:break-word;}
+  .diag-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--borda);font-size:13px;}
+  .diag-row b{color:var(--verde);font-variant-numeric:tabular-nums;}
+  .diag-close{margin-top:18px;width:100%;padding:11px;border:none;border-radius:10px;background:var(--verde);color:#fff;font-weight:700;cursor:pointer;}
+  .ex-zoom{display:flex;align-items:center;gap:3px;}
+  .ex-zoom button{width:24px;height:24px;border:1px solid var(--borda);border-radius:6px;background:#fff;cursor:pointer;color:#333;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;}
+  .ex-zoom button:hover{background:var(--cinza-bg);}
+  .ex-zoom #zoom-lbl{font-size:11.5px;color:var(--cinza);min-width:40px;text-align:center;}
+  /* adicionar (botão direito) / excluir bloco no Markdown + edição no Legível */
+  .md-block{position:relative;}
+  .md-del{position:absolute;top:6px;right:6px;width:20px;height:20px;border:none;border-radius:5px;background:transparent;color:var(--cinza);cursor:pointer;font-size:12px;line-height:1;opacity:0;}
+  .md-block:hover .md-del{opacity:1;}
+  .md-del:hover{background:#fde8e8;color:var(--vermelho);}
+  .md-ctx{position:fixed;z-index:9999;display:none;background:#fff;border:1px solid var(--borda);border-radius:9px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:5px;min-width:180px;font-size:13px;}
+  .md-ctx .mi{padding:8px 12px;border-radius:6px;cursor:pointer;color:#333;}
+  .md-ctx .mi:hover{background:var(--verde-claro);color:var(--verde);}
+  .md-ctx .mi.del:hover{background:#fde8e8;color:var(--vermelho);}
+  .leg-block > .leg-p{border-radius:6px;transition:none;}
+  .leg-block > .leg-p:hover{background:rgba(30,91,49,.05);cursor:text;}
+  .leg-p[contenteditable="true"],.md-content[contenteditable="true"]{outline:2px solid var(--laranja);outline-offset:2px;background:#fff;border-radius:6px;}
+  .leg-block.novo{border-left:3px solid var(--laranja);padding-left:8px;}
+</style>
+</head>
+<body>
+
+<div id="view-login" class="login-overlay">
+  <div class="login-card">
+    <div class="login-logo"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M4 19h16"/></svg></div>
+    <div class="login-tit"><b>Vetorização Cientométrica</b><small>SQUAD 2</small></div>
+    <div class="login-sub">Acesse a plataforma</div>
+    <form class="login-form" onsubmit="entrar(event)">
+      <label>E-mail</label>
+      <input id="login-user" type="text" autocomplete="username" placeholder="voce@exemplo.com" autocomplete="username" autofocus>
+      <label>Senha</label>
+      <input id="login-pass" type="password" autocomplete="current-password" placeholder="sua senha">
+      <div class="login-erro" id="login-erro"></div>
+      <button type="submit" class="login-btn">Entrar</button>
+    </form>
+    <div class="login-nota">Não há auto-cadastro. Peça acesso a alguém da equipe.</div>
+  </div>
+</div>
+
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M4 19h16"/></svg></div>
+    <div class="sb-brand-txt"><b>Vetorização<br>Cientométrica</b><small>SQUAD 2</small></div>
+    <button class="sb-collapse" onclick="toggleSidebar()" title="Minimizar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg></button>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-item ativo" id="nav-home" onclick="irHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></div>
+    <div class="sb-item desativado" id="nav-extract" onclick="irExtracao()" title="Abra um documento na Home para analisar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg><span>Analisar</span></div>
+    <div class="sb-item" id="nav-gpu" onclick="irExtracaoGPU()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h2M16 10h2M14 14h4"/></svg><span>Extração</span></div>
+    <div class="sb-item" id="nav-vet" onclick="irVetorizacao()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg><span>Vetorização</span></div>
+    <div class="sb-item" id="nav-equipe" onclick="irEquipe()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Equipe</span></div>
+  </nav>
+  <div class="sb-plan">
+    <small>Coleção <b style="color:var(--verde)" id="uso-col">—</b></small>
+    <div class="barra"><span id="uso-barra"></span></div>
+    <small id="uso-txt">escolha na aba Vetorização</small>
+  </div>
+  <div class="sb-user" id="sb-user" onclick="alternarMenuConta(event)" title="Sua conta">
+    <div class="av">--</div>
+    <div style="flex:1;min-width:0"><span id="sb-nome">—</span><br><small id="sb-sub">—</small></div>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+         stroke-linecap="round" stroke-linejoin="round" style="opacity:.5;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+  <div id="menu-conta" class="menu-conta" style="display:none">
+    <div class="menu-cab"><b id="mc-nome">—</b><small id="mc-email">—</small></div>
+    <div class="menu-item" onclick="abrirMinhaConta()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Minha conta</div>
+    <div class="menu-item" onclick="abrirHistorico();fecharMenuConta()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Histórico</div>
+    <div class="menu-sep"></div>
+    <div class="menu-item perigo" onclick="sair()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sair</div>
+  </div>
+</aside>
+
+<div class="conteudo">
+  <div class="topbar">
+    <button class="topbar-expand" onclick="toggleSidebar()" title="Expandir menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg></button>
+    <span class="tit" id="topbar-tit">Home</span>
+    <span class="sp"></span>
+    <span class="btn-top" onclick="abrirConfigs()" style="cursor:pointer">Configs</span><span class="btn-top" onclick="abrirHistorico()" style="cursor:pointer">Histórico</span>
+  </div>
+
+  <!-- HOME -->
+  <div class="home" id="view-home">
+    <div class="home-hero" id="hero-home" onclick="alternarHero()" title="Clique para expandir">
+      <div class="hero-topo">
+        <h2>PDFs aprovados para extração</h2>
+        <svg id="hero-seta" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="opacity:.75">
+          <polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <p id="hero-desc">Artigos aprovados pelo curador na Squad 1, recebidos pela API. Só os metadados chegam aqui
+         — o parser (DocLayout-YOLO + Chandra OCR) é quem descobre páginas, tabelas, figuras e fórmulas.</p>
+      <div class="home-badges" id="hero-badges">
+        <div class="home-badge"><div class="n" id="badge-curad">—</div><div class="l">Aprovados na curadoria</div></div>
+        <div class="home-badge"><div class="n" id="badge-total">0</div><div class="l">Baixados aqui</div></div>
+        <div class="home-badge"><div class="n" id="badge-ext">0</div><div class="l">Extraídos (parser)</div></div>
+        <div class="home-badge"><div class="n" id="badge-vet">0</div><div class="l">Vetorizados (Qdrant)</div></div>
+      </div>
+      <div id="hero-resumo" class="hero-resumo"></div>
+    </div>
+    <div class="busca-faixa">
+      <div class="busca-wrap">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"
+             stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        <input id="busca" type="search" placeholder="Buscar por título, autor, periódico, DOI ou nome do arquivo…"
+               oninput="buscar(this.value)" autocomplete="off">
+        <button id="busca-x" onclick="limparBusca()" title="Limpar">&#10005;</button>
+      </div>
+      <span id="busca-info"></span>
+    </div>
+    <div class="lista-topo">
+      <div class="filtros" id="filtros"><span class="filtro-lbl">Categoria:</span></div>
+      <div class="filtros"><span class="filtro-lbl">Situação:</span>
+        <select id="sit" onchange="mudarSituacao(this.value)" class="sel-ordem">
+          <option value="todas">Todas</option>
+          <option value="extraidos">Extraídos</option>
+          <option value="nao">Não extraídos</option>
+          <option value="vetorizados">Vetorizados</option>
+          <option value="nao_vet">Não vetorizados</option>
+        </select>
+      </div>
+      <div class="filtros">
+        <button id="btn-sync" onclick="sincronizarCuradoria()" class="filtro" title="Consulta a API da Squad 1 e vê se há documentos novos">Buscar novos</button>
+        <span id="sync-quando" style="font-size:11.5px;color:var(--cinza)"></span>
+      </div>
+      <div class="filtros"><span class="filtro-lbl">Por página:</span>
+        <select id="por-pagina" onchange="mudarPorPagina(this.value)" class="sel-ordem">
+          <option value="10">10</option><option value="20" selected>20</option>
+          <option value="50">50</option><option value="100">100</option>
+          <option value="0">Todos</option>
+        </select>
+      </div>
+      <div class="filtros"><span class="filtro-lbl">Ordenar:</span>
+        <select id="ordem" onchange="mudarOrdem(this.value)" class="sel-ordem">
+          <option value="recentes">Recém-adicionados</option>
+          <option value="antigos">Mais antigos</option>
+          <option value="maiores">Maiores (páginas)</option>
+          <option value="menores">Menores (páginas)</option>
+          <option value="titulo">Título (A–Z)</option>
+        </select>
+      </div>
+      <div class="acoes">
+        <div class="view-toggle"><button class="vbtn ativo" id="vb-lista" onclick="setView('lista')" title="Lista"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button><button class="vbtn" id="vb-grade" onclick="setView('grade')" title="Grade"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button></div>
+        <span class="sel-info" id="sel-info">Nenhum selecionado</span>
+        <button class="btn-parser" id="btn-parser" disabled onclick="analisarSelecionados()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13l2 2 4-4"/></svg>
+          Analisar (Parser)
+        </button>
+        <button class="btn-vet-lista" id="btn-vet-lista" onclick="vetorizarSelecionados()" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+          Vetorizar (Qdrant)</button>
+      </div>
+    </div>
+    <div class="lista-head">
+      <label class="chkall"><input type="checkbox" id="chk-all" onclick="selecionarTodos(this)"> selecionar todos</label>
+      <span class="lh-doc">Documento (metadados da API)</span>
+      <span class="lh-stat">Status do pipeline</span>
+      <span class="lh-acao"></span>
+    </div>
+    <div class="lista" id="lista"></div>
+    <div id="paginacao" class="paginacao"></div>
+    <footer class="rodape">
+      <div class="rodape-marca"><b>SB100</b> — Squad 2</div>
+      <div>Vetorização e extração</div>
+    </footer>
+  </div>
+
+  <!-- EXTRACT -->
+
+
+  <div class="home" id="view-equipe" style="display:none">
+    <div class="home-hero">
+      <h2>Equipe</h2>
+      <p>Quem tem acesso a esta plataforma. O cadastro e' interno: nao existe auto-registro
+         na tela de login — so' quem ja' tem conta cadastra outra pessoa.</p>
+      <div class="home-badges">
+        <div class="home-badge"><div class="n" id="eq-total">0</div><div class="l">Integrantes</div></div>
+        <div class="home-badge"><div class="n" id="eq-admins">0</div><div class="l">Administradores</div></div>
+      </div>
+    </div>
+    <div class="lista-topo">
+      <div class="filtros"><span class="filtro-lbl">Integrantes</span></div>
+      <div class="filtros"><button class="filtro ativo" id="eq-btn-novo" onclick="formIntegrante(true)">+ Cadastrar integrante</button></div>
+    </div>
+    <div id="eq-form" style="display:none;background:#fff;border:1px solid var(--borda);border-radius:12px;padding:18px 20px;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><label class="eq-lbl">Nome</label>
+          <input id="eq-nome" class="eq-inp" placeholder="Nome da pessoa"></div>
+        <div><label class="eq-lbl">E-mail</label>
+          <input id="eq-email" type="email" class="eq-inp" placeholder="pessoa@exemplo.com"></div>
+        <div><label class="eq-lbl">Senha provisoria (min. 8)</label>
+          <input id="eq-senha" type="text" class="eq-inp" placeholder="a pessoa troca depois"></div>
+        <div><label class="eq-lbl">Cargo</label>
+          <select id="eq-cargo" class="eq-inp">
+            <option value="curador">Curador — le e edita documentos</option>
+            <option value="admin">Admin — tudo, inclusive cadastrar</option>
+            <option value="leitor">Leitor — so consulta</option>
+          </select></div>
+      </div>
+      <div id="eq-erro" style="min-height:18px;font-size:12.5px;color:var(--vermelho);margin-top:8px"></div>
+      <div style="display:flex;gap:8px">
+        <button onclick="cadastrarIntegrante()" id="eq-salvar" class="eq-btn">Cadastrar</button>
+        <button onclick="formIntegrante(false)" class="eq-btn2">Cancelar</button>
+      </div>
+    </div>
+    <div class="lista" id="eq-lista"></div>
+  </div>
+  <div class="home" id="view-gpu" style="display:none">
+    <div class="home-hero">
+      <h2>Extração</h2>
+      <p>A extração roda onde há GPU: no Colab, ou num servidor com placa. Este site não extrai.
+         Ele guarda a fila, recebe o estado de quem extrai, e aceita o resultado pronto por upload.</p>
+      <div class="home-badges">
+        <div class="home-badge"><div class="n" id="gpu-badge-estado">—</div><div class="l">Worker de extração</div></div>
+        <div class="home-badge"><div class="n" id="gpu-badge-fila">0</div><div class="l">Na fila</div></div>
+        <div class="home-badge"><div class="n" id="gpu-badge-sinal">—</div><div class="l">Último sinal</div></div>
+      </div>
+    </div>
+    <div class="up-card" id="up-card">
+      <h3>Extrair fora daqui</h3>
+      <div class="up-sub">O computador com GPU (Colab ou um servidor na nuvem) não precisa de chave nenhuma do
+        banco: ele recebe um lote por aqui e devolve o resultado por aqui. O site confere o pacote inteiro antes de
+        gravar, e documento que já foi extraído não é sobrescrito sem você pedir.</div>
+      <div class="up-passos">
+        <div class="up-passo"><b>1. BAIXE UM LOTE</b>
+          PDFs ainda não extraídos, com os metadados da curadoria.
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap">
+            <input id="lote-qtd" type="number" min="1" max="50" value="5"
+                   style="width:58px;padding:5px 6px;border:1px solid var(--borda);border-radius:7px;font-family:inherit;font-size:12.5px">
+            <label style="display:flex;align-items:center;gap:4px;font-size:11.5px;cursor:pointer">
+              <input type="checkbox" id="lote-menores" checked> menores antes</label>
+          </div>
+          <button class="up-btn" id="btn-lote" onclick="baixarLote()" style="margin-top:8px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Baixar lote</button>
+          <div id="lote-info" style="font-size:11.5px;color:var(--cinza);margin-top:6px"></div></div>
+        <div class="up-passo"><b>2. BAIXE O NOTEBOOK</b>
+          Abra no Colab (com <b style="display:inline;color:inherit">GPU</b>) ou no Jupyter do servidor.
+          <button class="up-btn sec" onclick="baixarNotebook()" style="margin-top:8px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            extrator_lote.ipynb</button></div>
+        <div class="up-passo"><b>3. RODE NA GPU</b>
+          A célula 2 pede o <code>lote_….zip</code>. Rode até a 4, que baixa o
+          <code>extracao_….zip</code>. Sem servidor de notebook: <code>python extractor/rodar_lote.py lote_….zip</code></div>
+        <div class="up-passo"><b>4. ENVIE O RESULTADO</b>
+          Arraste o <code>extracao_….zip</code> abaixo. É o único formato aceito. Os documentos
+          aparecem na Home como extraídos.</div>
+      </div>
+      <input type="file" id="up-arquivo" accept=".zip,application/zip" style="display:none" onchange="upEscolher(this.files[0])">
+      <div class="up-zona" id="up-zona" onclick="el('up-arquivo').click()">
+        <b>Clique ou arraste o .zip aqui</b><br>Só a saída do notebook é aceita: um zip com <code>index.json</code> e uma pasta por documento.
+      </div>
+      <div id="up-resultado"></div>
+    </div>
+    <div class="lista-topo">
+      <div class="filtros"><span class="filtro-lbl">Worker:</span><span id="gpu-detalhe" style="font-size:12.5px;color:var(--cinza)"></span></div>
+    </div>
+    <div class="lista" id="gpu-fila"></div>
+  </div>
+  <div class="home" id="view-vet" style="display:none">
+    <div class="home-hero">
+      <h2>Vetorização</h2>
+      <p>Fatia o texto extraído (1024 caracteres, 20% de sobreposição, tabelas e figuras inteiras) e grava os
+         vetores no Qdrant. Cada coleção é um índice à parte: um documento pode estar numa e faltar em outra,
+         então tudo aqui é sempre em relação à coleção escolhida.</p>
+      <div class="home-badges">
+        <div class="home-badge"><div class="n" id="vet-badge-feitos">—</div><div class="l">Nesta coleção</div></div>
+        <div class="home-badge"><div class="n" id="vet-badge-pontos">—</div><div class="l">Pontos na coleção</div></div>
+        <div class="home-badge"><div class="n" id="vet-badge-cpu">—</div><div class="l">Este servidor</div></div>
+      </div>
+    </div>
+
+    <div class="up-card">
+      <h3>1. Escolha a coleção</h3>
+      <div class="up-sub">A lista vem do Qdrant. Coleção sem os vetores <code>vetor_denso</code> (1024) e
+        <code>vetor_esparso</code> aparece desabilitada: os vetores daqui não cabem nela.</div>
+      <div class="vet-barra">
+        <select id="vet-col" onchange="vetTrocarColecao()"><option>carregando…</option></select>
+        <span id="vet-col-info" style="font-size:12.5px;color:var(--cinza)"></span>
+      </div>
+      <div class="vet-barra" id="vet-nova" style="display:none;margin-top:10px">
+        <input id="vet-nova-nome" placeholder="nova_colecao" maxlength="63" style="width:200px">
+        <button class="up-btn sec" onclick="vetCriarColecao()">Criar coleção</button>
+        <span style="font-size:11.5px;color:var(--cinza)">minúsculas, números e _; começar com <code>teste_</code> marca como teste</span>
+      </div>
+    </div>
+
+    <div class="up-card">
+      <h3>2. Escolha os documentos</h3>
+      <div class="up-sub">Só documentos já extraídos. Quando o texto foi corrigido à mão na tela Analisar,
+        é a versão corrigida que vai para o Qdrant.</div>
+      <div class="vet-barra">
+        <button class="filtro ativo" id="vf-nao" onclick="vetFiltro('nao')">Não vetorizados nesta coleção</button>
+        <button class="filtro" id="vf-sim" onclick="vetFiltro('sim')">Já vetorizados</button>
+        <button class="filtro" id="vf-todos" onclick="vetFiltro('todos')">Todos</button>
+        <input id="vet-busca" placeholder="buscar título ou arquivo" oninput="vetRender()" style="flex:1;min-width:160px">
+      </div>
+      <div class="vet-tab-wrap" id="vet-docs"></div>
+      <div class="up-acoes" style="justify-content:space-between">
+        <span id="vet-sel-info" style="font-size:12.5px">Nenhum selecionado</span>
+        <button class="up-btn sec" onclick="vetLimparSel()">Limpar seleção</button>
+      </div>
+    </div>
+
+    <div class="up-card" id="vet-acoes">
+      <h3>3. Vetorize</h3>
+      <div class="vet-metodos">
+        <div class="vet-metodo">
+          <h4>A. Numa máquina com GPU (Colab ou nuvem)</h4>
+          <div class="up-sub" style="margin-bottom:10px">A máquina não recebe chave nenhuma: leva um pacote daqui e devolve os vetores por aqui.</div>
+          <div class="up-passos" style="grid-template-columns:1fr 1fr">
+            <div class="up-passo"><b>1. BAIXE O PACOTE</b>Os selecionados, com o texto e os metadados.
+              <button class="up-btn" id="vet-btn-pacote" onclick="vetBaixarPacote()" style="margin-top:8px" disabled>Baixar pacote</button>
+              <div id="vet-pacote-info" style="font-size:11.5px;color:var(--cinza);margin-top:6px"></div></div>
+            <div class="up-passo"><b>2. BAIXE O NOTEBOOK</b>Abra no Colab com GPU, ou no Jupyter do servidor.
+              <button class="up-btn sec" onclick="vetBaixarNotebook()" style="margin-top:8px">vetorizador_lote.ipynb</button></div>
+            <div class="up-passo"><b>3. RODE</b>A célula 2 pede o <code>pacote_….zip</code>, a 3 pede a chave do
+              Qdrant (não fica salva em lugar nenhum) e a 4 calcula e grava direto na coleção.</div>
+            <div class="up-passo"><b>4. CONFIRME AQUI</b>Clique em <b style="display:inline;color:inherit">Atualizar</b> abaixo: o site
+              confere os pontos no Qdrant e registra quem foi vetorizado.</div>
+          </div>
+          <div style="border:1px solid var(--borda);border-radius:10px;padding:12px 14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+              <b style="font-size:13px">Gravados pela GPU, aguardando confirmação</b>
+              <button class="up-btn sec" onclick="vetCarregarPendentes()">Atualizar</button>
+            </div>
+            <div id="vet-pendentes" style="font-size:12.5px;color:var(--cinza);margin-top:6px">—</div>
+          </div>
+          <details style="margin-top:12px;font-size:12.5px">
+            <summary style="cursor:pointer;color:var(--cinza)">Sem acesso ao Qdrant na máquina da GPU? Envie o <code>vetores_….zip</code></summary>
+            <div style="margin-top:8px;color:var(--cinza)">Rode o notebook com <code>ENVIAR_DIRETO = False</code>; ele gera o zip e o site grava.</div>
+            <input type="file" id="vet-arquivo" accept=".zip,application/zip" style="display:none" onchange="vetEscolher(this.files[0])">
+            <div class="up-zona" id="vet-zona" onclick="el('vet-arquivo').click()" style="margin-top:8px">
+              <b>Clique ou arraste o vetores_….zip aqui</b><br>Só a saída do vetorizador é aceita.
+            </div>
+          </details>
+        </div>
+        <div class="vet-metodo">
+          <h4>B. Aqui mesmo, no servidor do site</h4>
+          <div class="up-sub" style="margin-bottom:10px">Sem baixar nada. Só funciona se a CPU do servidor tiver AVX e as
+            bibliotecas de embedding estiverem instaladas; o site confere isso antes de liberar.</div>
+          <div id="vet-cap" style="font-size:12.5px;line-height:1.6;color:var(--cinza)">Verificando o servidor…</div>
+          <button class="up-btn" id="vet-btn-site" onclick="vetNoSite()" style="margin-top:10px" disabled>Vetorizar no site</button>
+          <div id="vet-tarefa" style="font-size:12.5px;margin-top:8px"></div>
+        </div>
+      </div>
+      <div id="vet-resultado"></div>
+    </div>
+  </div>
+  <div class="extract" id="view-extract">
+    <div class="ex-toolbar">
+      <span class="ex-back" onclick="irHome()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Voltar</span>
+      <span class="ex-file"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--vermelho)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span id="ex-filename">arquivo.pdf</span></span>
+      <span class="ex-nav"><button id="pg-prev" onclick="mudarPagina(-1)">‹</button><input id="ex-page-inp" class="ex-page-inp" type="text" inputmode="numeric" value="1" oninput="this.value=this.value.replace(/\D/g,'')" onchange="irParaPagina(this.value)" onkeydown="pageInpKey(event)" title="Digite a página e Enter"> de <span id="ex-total">1</span><button id="pg-next" onclick="mudarPagina(1)">›</button></span>
+      <span class="ex-rota" id="ex-rota"></span>
+      <span class="ex-zoom"><button onclick="zoomPdf(-15)" title="Menos zoom">−</button><span id="zoom-lbl">100%</span><button onclick="zoomPdf(15)" title="Mais zoom">+</button><button onclick="zoomReset()" title="Resetar zoom">⟲</button></span>
+      <span class="sp"></span>
+      <span style="color:var(--cinza)">Passe o mouse no texto ou no PDF — os dois se destacam</span>
+      <span id="edicao-estado" style="display:none;align-items:center;gap:5px;font-size:12px;font-weight:600;margin-left:10px"></span>
+      <button id="btn-descartar" onclick="descartarEdicao()" title="Volta ao texto que a extração produziu"
+              style="display:none;margin-left:8px;padding:4px 10px;border:1px solid var(--borda);border-radius:7px;background:#fff;font-size:12px;cursor:pointer">Descartar edição</button>
+    </div>
+    <div class="ex-split">
+      <div class="pdf-pane" id="pdf-pane"><div class="pdf-wrap" id="pdf-wrap"><img id="pdf-img" alt=""></div><div id="sem-extracao" style="display:none;align-items:center;justify-content:center;height:100%;padding:40px"><div style="text-align:center;max-width:400px"><div style="font-size:42px;line-height:1;margin-bottom:14px">📄</div><div style="font-weight:700;font-size:15px;margin-bottom:6px">Ainda não extraído</div><div style="font-size:13px;color:var(--cinza);line-height:1.6">O PDF está aprovado e guardado, mas o parser ainda não rodou. Não há páginas nem blocos para mostrar.</div></div></div></div>
+      <div class="res-pane">
+        <div class="res-tabs">
+          <div class="res-tab ativo" id="tab-legivel" onclick="mostrarTab('legivel')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/></svg> Legível</div>
+          <div class="res-tab" id="tab-md" onclick="mostrarTab('md')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M7 15V9l2.5 3L12 9v6M16 9v6M14 13l2 2 2-2"/></svg> Markdown</div>
+          <div class="res-tab" id="tab-meta" onclick="mostrarTab('meta')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> Metadados</div>
+          <div class="res-tab" id="tab-code" onclick="mostrarTab('code')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Código</div>
+          <span class="res-tabs-sp"></span>
+          <div class="res-menu">
+            <button class="res-menu-btn" onclick="toggleMenu(event)" title="Mais"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+            <div class="res-menu-drop" id="res-menu-drop">
+              <div class="res-menu-item" onclick="baixarMd()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Baixar Markdown</div>
+              <div class="res-menu-item" onclick="baixarPdf()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Baixar PDF</div>
+              <div class="res-menu-item" onclick="abrirDiag()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20a8 8 0 1 0-8-8"/><path d="M12 12l4-2"/></svg> Diagnostics</div>
+            </div>
+          </div>
+        </div>
+        <div class="res-body" id="res-legivel"></div>
+        <div class="res-body" id="res-md" style="display:none"></div>
+        <div class="res-body" id="res-meta" style="display:none"></div>
+        <div class="res-body" id="res-code" style="display:none"><div class="code-topo">Pipeline de extração usado (híbrido Squad 2):</div><pre class="code-block"># Extrator híbrido SB100 — Squad 2
+# YOLO roteia · Chandra OCR 2 na tabela · Docling no texto · PyMuPDF de rede de segurança
+
+for pagina in documento:
+    regioes = yolo.detectar(pagina)               # DocLayout-YOLO (detecção 9/10)
+
+    if any(r.tipo == "tabela" for r in regioes):
+        # Chandra OCR 2 na PÁGINA INTEIRA -> raw com &lt;div data-bbox data-label&gt;
+        raw    = chandra.ocr_layout(pagina_hi)    # bbox exata + tipo + &lt;sup&gt;/&lt;sub&gt;
+        blocos = parse_data_bbox(raw)             # calibra por (min+max) das coordenadas
+    else:
+        blocos  = docling.texto_na_ordem(pagina)  # Docling: reading order + fidelidade
+        blocos += rede_seguranca_pymupdf(pagina)  # recupera o que o Docling dropou
+
+    for fig in (r for r in regioes if r.tipo == "figura"):
+        blocos.append(chandra.descrever(recorte(fig)))   # subtipo: gráfico / foto
+
+    blocos = ordenar_por_coluna(blocos)           # ordem de leitura (2 colunas)
+    salvar(blocos)                                 # layout.json + pages/ + document.md</pre></div>
+      </div>
+    </div>
+    <div class="ex-foot">
+      <button class="btn-vet" id="btn-vet" onclick="vetorizar()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M4 19h16"/></svg> Vetorizar</button>
+      <div class="vet-live" id="vet-live"></div>
+      <div class="vet-ok" id="vet-ok"><span class="ck"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span id="vet-ok-n" style="display:none">0</span>Já vetorizado. As coleções estão na aba Vetorização.</span></div>
+    </div>
+  </div>
+</div>
+
+  <div id="diag-modal" onclick="if(event.target===this)fecharDiag()">
+    <div class="diag-card">
+      <h3><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20a8 8 0 1 0-8-8"/><path d="M12 12l4-2"/></svg> Diagnostics</h3>
+      <div class="dsub" id="diag-file"></div>
+      <div id="diag-body"></div>
+      <button class="diag-close" onclick="fecharDiag()">Fechar</button>
+    </div>
+  </div>
+
+<!-- dados agora vêm da API (FastAPI + Supabase) -->
+<script>
+/* ═══ dados vindos da API (FastAPI -> Supabase) ═══ */
+let IDX = [], DOCS = {};
+const layoutDe = (slug)=> DOCS[slug] || {paginas:[]};
+const API = "/api";
+
+/* --- adaptadores: formato da API (colunas em inglês) -> formato do front --- */
+function _slugDe(f){ return String(f||"").replace(/\.pdf$/i,""); }
+function _meta(m){
+  m = m || {};
+  return { titulo:m.title||"(sem título)", autores:m.authors||"—", ano:m.year||"—",
+           periodico:m.journal||"—", volume:"—", doi:m.doi||"—",
+           categoria:m.category||"—", tipo:m.document_type||"Artigo científico",
+           palavras_chave:m.keywords||"" };
+}
+function _counts(bs){
+  return { tabelas:bs.filter(b=>b.tipo==="tabela").length,
+           figuras:bs.filter(b=>b.tipo==="grafico"||b.tipo==="foto").length,
+           formulas:bs.filter(b=>b.tipo==="formula").length };
+}
+function _resumo(pgs){
+  const esc_ = pgs.filter(p=>p.tipo==="escaneada").length;
+  const s = {organicas:pgs.length-esc_, escaneadas:esc_, tabelas:0, figuras:0, formulas:0};
+  pgs.forEach(p=>{ s.tabelas+=p.counts.tabelas; s.figuras+=p.counts.figuras; s.formulas+=p.counts.formulas; });
+  return s;
+}
+
+/* --- chamadas à API --- */
+async function carregarDocumentos(){
+  const r = await apiFetch(API+"/documents");
+  if(!r.ok) throw new Error("GET /api/documents -> HTTP "+r.status);
+  IDX = (await r.json()).map(d=>({
+    id:d.id, slug:_slugDe(d.pdf_file), arquivo:d.pdf_file,
+    n_paginas:d.total_pages||0, meta:_meta(d.meta), thumb:d.thumbnail||"",
+    resumo:d.resumo||{tabelas:0,figuras:0,formulas:0},
+    aprovado:d.approved, extraido:d.extracted, vetorizado:d.vectorized,
+    criado_em:d.created_at||null, extraido_em:d.extracted_at||null,
+    na_fila:!!d.extraction_requested_at
+  }));
+  // o painel mostrava "0 EXTRAIDOS" mesmo com tudo extraido: os conjuntos
+  // nasciam vazios e so' eram preenchidos ao abrir um documento na sessao
+  extraidos.clear(); vetorizados.clear();
+  IDX.forEach(function(d,i){ if(d.extraido) extraidos.add(i); if(d.vetorizado) vetorizados.add(i); });
+  return IDX;
+}
+async function carregarDoc(i){
+  const d = IDX[i];
+  if(DOCS[d.slug]) return DOCS[d.slug];                 // cache: só busca uma vez
+  const r = await apiFetch(API+"/document/"+d.id);
+  if(!r.ok) throw new Error("GET /api/document -> HTTP "+r.status);
+  const doc = await r.json();
+  const paginas = (doc.paginas||[]).map(p=>({
+    n:p.n, img_url:p.img_url, img:"",
+    w:p.w||1000, h:p.h||1300,          // do banco; senão o onload da imagem corrige
+    rota:p.rota||null, tipo:p.tipo||null,
+    blocos:(p.blocos===null||p.blocos===undefined)?null:p.blocos,   // null = ainda nao buscado
+    counts:p.counts||_counts(p.blocos||[])
+  }));
+  DOCS[d.slug] = { slug:d.slug, n_paginas:d.n_paginas, meta:d.meta,
+                   paginas:paginas, resumo:_resumo(paginas),
+                   editado:!!doc.editado, editado_em:doc.editado_em||doc.edited_at||null };
+  return DOCS[d.slug];
+}
+
+const TAGS = {texto:"texto", tabela:"tabela", grafico:"gráfico", foto:"foto/imagem",
+              formula:"fórmula", ocr_pagina:"página (OCR)"};
+
+let extraidos=new Set(), vetorizados=new Set(), selecionados=new Set();
+let filtroCat="todas", filtroSit="todas", ordem="recentes", docAtual=null, paginaAtual=1, parserRodando=false;
+
+const el = id => document.getElementById(id);
+
+/* ── NAV / SIDEBAR ── */
+function setNav(q){ el("nav-home").classList.toggle("ativo",q==="home");
+  el("nav-extract").classList.toggle("ativo",q==="extract");
+  var g=el("nav-gpu"); if(g) g.classList.toggle("ativo",q==="gpu");
+  var eqn=el("nav-equipe"); if(eqn) eqn.classList.toggle("ativo",q==="equipe");
+  var vn=el("nav-vet"); if(vn) vn.classList.toggle("ativo",q==="vet"); }
+function toggleSidebar(){ document.body.classList.toggle("collapsed"); }
+function irExtracao(){
+  if(docAtual===null) return;   // sem documento aberto nao ha o que analisar
+  let a = docAtual;
+  if(a===null || !extraidos.has(a)){ a=[...extraidos][0]; if(a===undefined) a=0; }
+  abrirDoc(a);
+}
+
+/* ── HOME (lista) ── */
+const ICO_PDF='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+const ICO_APROV='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+const ICO_EXTR='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13l2 2 4-4"/></svg>';
+const ICO_QDR='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>';
+
+function montarFiltros(){
+  const cats = ["todas", ...new Set(IDX.map(d=>d.meta.categoria).filter(Boolean))];
+  const box = el("filtros");
+  box.innerHTML = '<span class="filtro-lbl">Categoria:</span>';
+  cats.forEach(c=>{
+    const b=document.createElement("button");
+    b.className="filtro"+(c===filtroCat?" ativo":"");
+    b.textContent = c==="todas" ? "Todas" : c;
+    b.onclick=()=>filtrar(c,b);
+    box.appendChild(b);
+  });
+}
+function mudarSituacao(v){ filtroSit=v; MOSTRANDO=POR_PAGINA||1e9; renderHome(); }
+function montarSituacoes(){ var e=el("sit"); if(e) e.value=filtroSit; }
+function mudarOrdem(v){ ordem=v; renderHome(); }
+/* Aplica filtro e ordenacao, devolvendo os INDICES de IDX na ordem de exibicao.
+   Trabalha com indices porque toda a tela (selecao, abrir, extrair) referencia
+   o documento pela posicao em IDX. */
+function docsVisiveis(){
+  var idx=IDX.map(function(d,i){ return i; }).filter(function(i){
+    var d=IDX[i];
+    if(filtroCat!=="todas" && d.meta.categoria!==filtroCat) return false;
+    if(filtroSit==="extraidos"   && !extraidos.has(i))  return false;
+    if(filtroSit==="nao"         &&  extraidos.has(i))  return false;
+    if(filtroSit==="vetorizados" && !vetorizados.has(i)) return false;
+    if(filtroSit==="nao_vet"      &&  vetorizados.has(i)) return false;
+    if(!casaBusca(d)) return false;
+    return true;
+  });
+  var t=function(i){ return (IDX[i].meta.titulo||IDX[i].arquivo||"").toLowerCase(); };
+  var q=function(i){ return IDX[i].criado_em ? Date.parse(IDX[i].criado_em)||0 : 0; };
+  var p=function(i){ return IDX[i].n_paginas||0; };
+  var cmp={
+    recentes: function(a,b){ return q(b)-q(a) || t(a).localeCompare(t(b)); },
+    antigos:  function(a,b){ return q(a)-q(b) || t(a).localeCompare(t(b)); },
+    maiores:  function(a,b){ return p(b)-p(a); },
+    menores:  function(a,b){ return p(a)-p(b); },
+    titulo:   function(a,b){ return t(a).localeCompare(t(b),"pt-BR"); }
+  }[ordem];
+  return cmp ? idx.sort(cmp) : idx;
+}
+function filtrar(cat,btn){ filtroCat=cat; document.querySelectorAll(".filtro").forEach(b=>b.classList.toggle("ativo",b===btn)); renderHome(); }
+
+let viewMode = "lista";
+function thumbSrc(slug){
+  var e = IDX.find(function(x){ return x.slug===slug; });
+  if(e && e.thumb) return e.thumb;                        // URL assinada (API)
+  var d = DOCS[slug];                                     // fallback: doc já carregado
+  return (d && d.paginas && d.paginas[0] && d.paginas[0].img_url) || "";
+}
+function setView(mode){
+  viewMode = mode;
+  el("vb-lista").classList.toggle("ativo", mode==="lista");
+  el("vb-grade").classList.toggle("ativo", mode==="grade");
+  renderHome();
+}
+function renderHome(){
+  // parte/total em cada etapa: o denominador dos aprovados e' quanto a curadoria
+  // tem (da ultima checagem, sem bater na API); nas outras, quanto ha' no banco
+  // "16/230 aprovados" dava a entender que so' 16 foram aprovados. O total da
+  // curadoria virou indicador proprio, e os demais mostram progresso sobre o
+  // que de fato esta' aqui.
+  var noBanco=IDX.length;
+  el("badge-curad").textContent = TOTAL_CURADORIA || "—";
+  el("badge-total").textContent = TOTAL_CURADORIA ? (noBanco+" de "+TOTAL_CURADORIA) : String(noBanco);
+  el("badge-ext").textContent   = extraidos.size+" de "+noBanco;
+  el("badge-vet").textContent   = vetorizados.size+" de "+noBanco;
+  const lista = el("lista"); lista.innerHTML="";
+  lista.className = "lista" + (viewMode==="grade" ? " grade" : "");
+  el("view-home").classList.toggle("grade-mode", viewMode==="grade");
+  const todos=docsVisiveis();
+  const visiveis=todos.slice(0, MOSTRANDO);
+  if(!todos.length) lista.innerHTML='<div class="md-vazio">'+
+    (BUSCA ? 'Nada encontrado para "'+esc(BUSCA)+'".' : 'Nenhum documento com esses filtros.')+'</div>';
+  renderPaginacao(todos.length);
+  resumoHero();
+  visiveis.forEach((i)=>{
+    const d=IDX[i];
+    const ext=extraidos.has(i), vet=vetorizados.has(i), sel=selecionados.has(i), m=d.meta, r=d.resumo;
+    const thumb = thumbSrc(d.slug);
+    const node=document.createElement("div"); node.dataset.id=i;
+    if(viewMode==="grade"){
+      node.className="card-g"+(sel?" sel":"");
+      node.innerHTML=`
+        <div class="card-g-thumb">${thumb?`<img src="${thumb}" alt="">`:ICO_PDF}
+          <input type="checkbox" class="card-g-chk" ${sel?"checked":""} onchange="toggleSel(${i},this)"></div>
+        <div class="card-g-body">
+          <div class="linha-tit">${m.titulo}</div>
+          <div class="card-g-meta">${(m.autores||"").split(",")[0]} et al. · ${m.ano} · ${m.periodico} · <b>${d.n_paginas}</b> páginas</div>
+          <div class="card-g-chips">
+            <span class="mini-chip cat">${m.categoria}</span>
+            ${ext?'<span class="mini-chip ok">extraído</span>':(d.na_fila?'<span class="mini-chip fila">na fila</span>':'')}${vet?'<span class="mini-chip vet">vetorizado</span>':''}
+          </div>
+          <button class="btn-abrir" onclick="abrirDoc(${i})" title="Abrir">Abrir
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        </div>`;
+    } else {
+      node.className="linha"+(sel?" sel":"");
+      node.innerHTML=`
+        <div class="linha-esq">
+          <input type="checkbox" ${sel?"checked":""} onchange="toggleSel(${i},this)">
+          <div class="linha-thumb">${thumb?`<img src="${thumb}" alt="">`:ICO_PDF}</div>
+        </div>
+        <div class="linha-info">
+          <div class="linha-tit">${m.titulo}</div>
+          <div class="linha-meta">${(m.autores||"").split(",").slice(0,2).join(",")} et al. · ${m.ano} · ${m.periodico}
+            &nbsp;·&nbsp; DOI: <code>${m.doi}</code> &nbsp;·&nbsp; <span class="cat">${m.categoria}</span> &nbsp;·&nbsp; ${m.tipo} &nbsp;·&nbsp; <b>${d.n_paginas}</b> páginas</div>
+          <div class="linha-descoberto ${ext?"on":""}" id="desc-${i}">
+            Parser: <b>${d.n_paginas}</b> páginas · <b>${r.tabelas}</b> tabelas · <b>${r.figuras}</b> figuras · <b>${r.formulas}</b> fórmulas</div>
+        </div>
+        <div class="stages" id="stages-${i}">
+          <div class="stg s1 on"><div class="ico">${ICO_APROV}</div><div class="txt">Aprovado<br>Squad 1</div></div>
+          <span class="stg-seta">›</span>
+          <div class="stg s2 ${ext?"on":""}"><div class="ico">${ICO_EXTR}</div><div class="txt">Extraído<br>parser</div></div>
+          <span class="stg-seta">›</span>
+          <div class="stg s3 ${vet?"on":""}"><div class="ico">${ICO_QDR}</div><div class="txt">Vetorizado<br>Qdrant</div></div>
+        </div>
+        <div class="linha-acao">
+          <button class="btn-abrir" onclick="abrirDoc(${i})" title="Abrir extração">Abrir
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        </div>`;
+    }
+    lista.appendChild(node);
+  });
+  atualizarSelInfo();
+}
+function toggleSel(i,elc){ if(elc.checked) selecionados.add(i); else selecionados.delete(i);
+  const row=document.querySelector(`.linha[data-id="${i}"]`); if(row) row.classList.toggle("sel",elc.checked); atualizarSelInfo(); }
+function selecionarTodos(elc){ docsVisiveis().forEach(function(i){ if(elc.checked) selecionados.add(i); else selecionados.delete(i); }); renderHome(); }
+function atualizarSelInfo(){ const n=selecionados.size;
+  el("sel-info").textContent = n===0?"Nenhum selecionado":(n===1?"1 selecionado":n+" selecionados");
+  el("btn-parser").disabled = (n===0||parserRodando);
+  var bv=el("btn-vet-lista"); if(bv) bv.disabled = (n===0||parserRodando); }
+
+
+/* Documento aprovado mas ainda sem extracao: nao ha' pagina nem bloco para
+   mostrar. Antes caia aqui e ficava em "Carregando..." para sempre. */
+function mostrarNaoExtraido(d, i){
+  // mostra a camada de aviso SEM tocar no pdf-wrap: reescrever o innerHTML dele
+  // apagava a <img id="pdf-img"> e quebrava a exibicao de todos os documentos
+  // abertos depois — foi assim que o Boletim 100 apareceu como "nao extraido"
+  el("pdf-wrap").style.display="none";
+  el("sem-extracao").style.display="flex";
+  var fila = d.na_fila;
+  el("res-legivel").innerHTML =
+    '<div style="padding:22px">'+
+    '<div style="font-size:13px;line-height:1.7;color:#374151">'+
+    '<b>'+esc(d.meta.titulo||d.arquivo)+'</b><br>'+
+    (d.n_paginas||0)+' páginas · aprovado pela Squad 1</div>'+
+    (fila
+      ? '<div style="margin-top:16px;padding:12px 14px;background:#fef3c7;border:1px solid #fde68a;border-radius:9px;font-size:12.5px;color:#92400e">'+
+        '<b>Na fila de extração.</b> O lado com GPU consulta a fila e processa; '+
+        'o documento aparece extraído quando o resultado for ingerido.</div>'
+      : '')+
+    '<button onclick="pedirExtracao('+i+')" id="btn-extrair-um" '+
+    'style="margin-top:16px;width:100%;padding:11px;border:none;border-radius:10px;'+
+    'background:'+(fila?'#6b7280':'var(--verde)')+';color:#fff;font-weight:700;font-size:13.5px;cursor:pointer">'+
+    (fila?'Reenviar pedido de extração':'Solicitar extração')+'</button>'+
+    '<div style="margin-top:14px;padding:10px 12px;background:#f8f8f8;border:1px solid var(--borda);border-radius:8px;font-size:11.5px;color:var(--cinza);line-height:1.6">'+
+    'A extração precisa de GPU e roda no notebook (DocLayout-YOLO + Chandra OCR 2 + '+
+    'Docling + PyMuPDF). Este servidor não extrai — ele registra o pedido.</div></div>';
+  el("res-md").innerHTML=''; el("res-meta").innerHTML='';
+  renderMeta(d);
+  el("ex-page-inp").value=1; el("ex-total").textContent=d.n_paginas||0;
+  el("ex-rota").style.display="none";
+  marcarEstado(""); var bd=el("btn-descartar"); if(bd) bd.style.display="none";
+}
+async function pedirExtracao(i){
+  var d=IDX[i], b=el("btn-extrair-um");
+  if(b){ b.disabled=true; b.textContent="Solicitando…"; }
+  try{
+    var r=await apiFetch(API+"/document/"+d.id+"/extrair",{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({solicitado_por:USUARIO})});
+    if(!r.ok) throw new Error("HTTP "+r.status+" — "+(await r.text()).slice(0,120));
+    d.na_fila=true; mostrarNaoExtraido(d,i);
+  }catch(e){
+    if(b){ b.disabled=false; b.textContent="Solicitar extração"; }
+    abrirPainel("Não deu para solicitar", '<p style="font-size:13px">'+esc(e.message)+'</p>');
+  }
+}
+
+/* Avisa em vez de refazer em silencio: pedir extracao do que ja' foi extraido,
+   ou vetorizacao do que ja' esta' no Qdrant, e' quase sempre engano. */
+function separar(){
+  // Array.from, nao [].slice.call: `selecionados` e' um Set e slice sobre Set
+  // devolve array VAZIO (Set nao tem length) — os avisos nunca disparavam
+  var sel=Array.from(selecionados);
+  return {
+    extraidos:   sel.filter(function(i){ return  extraidos.has(i); }),
+    naoExtraidos:sel.filter(function(i){ return !extraidos.has(i); }),
+    vetorizados: sel.filter(function(i){ return  vetorizados.has(i); }),
+    naoVet:      sel.filter(function(i){ return !vetorizados.has(i); })
+  };
+}
+function listaNomes(idx, limite){
+  limite = limite||6;
+  var n = idx.slice(0,limite).map(function(i){
+    return '<li style="margin:2px 0">'+esc(((IDX[i].meta&&IDX[i].meta.titulo)||IDX[i].arquivo||"").slice(0,72))+'</li>';
+  }).join("");
+  if(idx.length>limite) n += '<li style="color:var(--cinza)">… e mais '+(idx.length-limite)+'</li>';
+  return '<ul style="margin:6px 0 0 18px;padding:0;font-size:12.5px">'+n+'</ul>';
+}
+async function vetorizarSelecionados(){
+  if(!selecionados.size) return;
+  var g=separar();
+  if(g.naoExtraidos.length){
+    abrirPainel("Ainda não extraídos",
+      '<p style="font-size:13px;line-height:1.7">'+g.naoExtraidos.length+' dos selecionados ainda não passaram '+
+      'pelo parser. Não há texto para vetorizar.</p>'+listaNomes(g.naoExtraidos)+
+      '<div style="margin-top:12px;font-size:12px;color:var(--cinza)">Extraia primeiro e depois vetorize.</div>');
+    if(!g.extraidos.length) return;
+  }
+  // a escolha da coleção e o "já está lá?" ficam na aba Vetorização
+  irVetorizacao(g.extraidos.map(function(i){ return IDX[i].id; }));
+}
+/* ── PARSER ──
+   Este servidor NAO extrai: a extracao roda no lado com GPU (hoje o notebook no
+   Colab). O botao coloca o documento na fila, e o lado GPU consulta /api/fila.
+   Antes daqui o botao so' animava a linha e marcava como extraido no navegador,
+   sem chamar nada — parecia ter funcionado e nao tinha. */
+async function analisarSelecionados(){
+  if(parserRodando||selecionados.size===0) return;
+  parserRodando=true; el("btn-parser").disabled=true;
+  var g=separar();
+  if(g.extraidos.length){
+    abrirPainel("Já extraídos",
+      '<p style="font-size:13px;line-height:1.7"><b>'+g.extraidos.length+'</b> dos selecionados já passaram pelo parser. '+
+      'Extrair de novo substituiria o resultado atual — e a curadoria feita à mão sobre eles.</p>'+
+      listaNomes(g.extraidos)+
+      (g.naoExtraidos.length ? '<div style="margin-top:14px;font-size:13px">Os outros <b>'+g.naoExtraidos.length+
+        '</b> serão colocados na fila.</div>' : ''));
+    if(!g.naoExtraidos.length){ parserRodando=false; el("btn-parser").disabled=false; return; }
+  }
+  var pedidos=0, jaFeitos=0, falhas=[];
+  for(const i of [...selecionados]){
+    if(extraidos.has(i)){ selecionados.delete(i); jaFeitos++; continue; }
+    var d=IDX[i];
+    try{
+      var r=await apiFetch(API+"/document/"+d.id+"/extrair", {method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({solicitado_por:USUARIO})});
+      if(!r.ok){ falhas.push(d.arquivo+": HTTP "+r.status); continue; }
+      d.na_fila=true; pedidos++; selecionados.delete(i);
+    }catch(e){ falhas.push(d.arquivo+": "+e.message); }
+  }
+  parserRodando=false; renderHome();
+  var msg="";
+  if(pedidos)  msg+=pedidos+" documento(s) na fila de extração. ";
+  if(jaFeitos) msg+=jaFeitos+" já estava(m) extraído(s). ";
+  if(falhas.length) msg+="Falhas: "+falhas.join("; ");
+  abrirPainel("Extração solicitada",
+    '<p style="font-size:13px;line-height:1.6">'+esc(msg||"Nada a fazer.")+'</p>'+
+    '<div style="margin-top:12px;padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:12px;color:#7c2d12">'+
+    '<b>Este servidor não extrai.</b> A extração precisa de GPU e roda no notebook '+
+    '(DocLayout-YOLO + Chandra OCR 2 + Docling + PyMuPDF). O que ficou registrado é o '+
+    '<i>pedido</i>: o lado GPU consulta <code>/api/fila</code> para saber o que processar, '+
+    'e o documento aparece como extraído quando o resultado for ingerido.</div>');
+}
+function analisarUm(i){
+  return new Promise(res=>{
+    const row=document.querySelector(`.linha[data-id="${i}"]`);
+    const s2=el("stages-"+i)?.querySelector(".s2");
+    if(row){ row.classList.add("analisando"); row.classList.remove("sel"); }
+    if(s2){ s2.classList.add("loading"); s2.querySelector(".ico").innerHTML='<span class="spin-sm"></span>'; }
+    setTimeout(()=>{
+      if(s2){ s2.classList.remove("loading"); s2.classList.add("on"); s2.querySelector(".ico").innerHTML=ICO_EXTR; }
+      el("desc-"+i)?.classList.add("on");
+      if(row){ const c=row.querySelector('input'); if(c) c.checked=false; const a=row.querySelector('.btn-abrir'); if(a) a.disabled=false; row.classList.remove("analisando"); }
+      res();
+    }, 1500+Math.random()*800);
+  });
+}
+
+/* ── HOME/EXTRACT switch ── */
+function irHome(){ el("view-home").style.display="block"; el("view-extract").style.display="none"; el("view-gpu").style.display="none"; el("view-equipe").style.display="none"; el("view-vet").style.display="none"; el("topbar-tit").textContent="Home"; setNav("home"); renderHome(); }
+
+function refletirEdicao(lay){
+  var b=el("btn-descartar");
+  if(b) b.style.display = (lay && lay.editado) ? "inline-block" : "none";
+  if(lay && lay.editado) marcarEstado("salvo", lay.editado_em); else marcarEstado("");
+}
+async function abrirDoc(i){
+  docAtual=i;   // abrir NAO extrai: quem marca extraido e' o banco, na ingestao
+  el("nav-extract").classList.remove("desativado");   // libera a aba Analisar
+  const d=IDX[i];
+  el("view-home").style.display="none"; el("view-gpu").style.display="none"; el("view-equipe").style.display="none"; el("view-vet").style.display="none"; el("view-extract").style.display="flex";
+  el("topbar-tit").textContent="Analisar"; el("ex-filename").textContent=d.arquivo; setNav("extract");
+  paginaAtual=1; legFiltro="tudo";
+  if(!d.extraido){ mostrarNaoExtraido(d, i); return; }
+  el("res-legivel").innerHTML='<div class="md-vazio">Carregando…</div>';
+  try{ await carregarDoc(i); }
+  catch(e){ el("res-legivel").innerHTML='<div class="md-vazio">Erro ao carregar: '+esc(e.message)+'</div>'; return; }
+  await renderPagina(); renderMeta(d); mostrarTab("legivel"); ligarHover(); resetVetFoot(i); zoomReset();
+  refletirEdicao(DOCS[d.slug]);
+}
+
+/* ── EXTRACT: página (imagem + overlays) + markdown ── */
+function paginasDoAtual(){ return layoutDe(IDX[docAtual].slug).paginas || []; }
+
+/* Busca os blocos de UMA pagina. O documento vem sem eles: no Boletim 100 os
+   5.074 blocos faziam a abertura levar 42 s. Guarda o que ja' baixou. */
+async function garantirBlocos(pg){
+  if(!pg || pg.blocos!==null) return pg;
+  var d=IDX[docAtual];
+  try{
+    var r=await apiFetch(API+"/document/"+d.id+"/pagina/"+pg.n);
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    var j=await r.json();
+    pg.blocos=j.blocos||[]; pg.counts=_counts(pg.blocos);
+  }catch(e){
+    pg.blocos=[];                       // nao trava a pagina; o erro aparece no painel
+    console.error("pagina "+pg.n+": "+e.message);
+  }
+  return pg;
+}
+async function renderPagina(){
+  el("pdf-wrap").style.display="";           // desfaz a camada de "nao extraido"
+  el("sem-extracao").style.display="none";
+  const d=IDX[docAtual], pags=paginasDoAtual();
+  const pg = pags[paginaAtual-1];
+  if(pg && pg.blocos===null){
+    el("res-legivel").innerHTML='<div class="md-vazio">Carregando página…</div>';
+    await garantirBlocos(pg);
+    if(pags[paginaAtual-1]!==pg) return;      // trocou de pagina enquanto buscava
+  }
+  el("ex-page-inp").value = paginaAtual; el("ex-total").textContent = d.n_paginas;
+  var _rota = el("ex-rota");
+  if(pg && pg.rota){ _rota.style.display="inline-block"; _rota.className="ex-rota rota-"+pg.rota; _rota.textContent = ({chandra:"Chandra",docling:"Docling",mineru:"MinerU",marker:"Marker"})[pg.rota] || pg.rota; }
+  else { _rota.style.display="none"; }
+  el("pg-prev").disabled = (paginaAtual===1);
+  el("pg-next").disabled = (paginaAtual>=pags.length);
+
+  const wrap=el("pdf-wrap"), img=el("pdf-img");
+  // limpa overlays antigos
+  wrap.querySelectorAll(".bbox").forEach(b=>b.remove());
+  img.onload = function(){                     // dimensões reais -> recortes de figura corretos
+    if(!pg._dim && img.naturalWidth){ pg._dim=true; pg.w=img.naturalWidth; pg.h=img.naturalHeight;
+      if(el("res-legivel").style.display!=="none") renderLegivel(pg); }
+  };
+  img.src = pg.img_url || pg.imgdata || `data/${d.slug}/${pg.img}`;
+
+  // overlays por bbox (percentuais → escalam com a imagem)
+  (pg.blocos||[]).forEach(b=>{
+    if(!b.bbox) return;
+    const [x0,y0,x1,y1]=b.bbox;
+    const o=document.createElement("div");
+    o.className="bbox"; o.dataset.id=b.id;
+    o.style.left=(x0*100)+"%"; o.style.top=(y0*100)+"%";
+    o.style.width=((x1-x0)*100)+"%"; o.style.height=((y1-y0)*100)+"%";
+    o.innerHTML=`<span class="tag">${TAGS[b.tipo]||b.tipo}</span>`;
+    wrap.appendChild(o);
+  });
+
+  renderMD(pg);
+  renderLegivel(pg);
+  el("pdf-pane").scrollTop=0; el("res-md").scrollTop=0;
+}
+
+function mudarPagina(delta){
+  const pags=paginasDoAtual(); const nova=paginaAtual+delta;
+  if(nova<1||nova>pags.length) return;
+  paginaAtual=nova; renderPagina().then(ligarHover);
+}
+function irParaPagina(v){
+  var pags=paginasDoAtual(), n=parseInt(String(v).replace(/\D/g,""),10);
+  if(!n || n<1 || n>pags.length){ el("ex-page-inp").value=paginaAtual; return; }  // fora do limite: rejeita
+  paginaAtual=n; renderPagina().then(ligarHover);
+}
+function pageInpKey(e){
+  if(e.key==="Enter"){ e.preventDefault(); irParaPagina(e.target.value); e.target.blur(); }
+  else if(e.key==="Escape"){ e.target.value=paginaAtual; e.target.blur(); }
+}
+
+function renderMD(pg){
+  const box=el("res-md"); box.innerHTML="";
+  const blocos = pg.blocos||[];
+  if(!blocos.length){ box.innerHTML='<div class="md-vazio">Sem blocos extraídos nesta página.</div>'; return; }
+  blocos.forEach(b=>{
+    const div=document.createElement("div");
+    div.className="md-block"+(b._novo?" novo":""); div.dataset.id=b.id;
+    const conf = (b.conf!==undefined) ? `<span class="conf">conf ${b.conf}</span>` : "";
+    div.innerHTML=`<span class="lbl">${TAGS[b.tipo]||b.tipo} ${conf}<span class="dica">✎ 2× clique · botão direito p/ adicionar</span></span><button class="md-del" title="Excluir bloco" onclick="excluirBloco('${b.id}')">✕</button><div class="md-content">${esc(b.md||"")}</div>`;
+    box.appendChild(div);
+    ativarEdicao(div);
+  });
+  initMdCtx();
+}
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* ── edição por duplo-clique ── */
+function ativarEdicao(elb){
+  const cont=elb.querySelector(".md-content");
+  elb.addEventListener("dblclick",()=>{
+    if(elb.classList.contains("editando")) return;
+    elb.classList.add("editando"); cont.setAttribute("contenteditable","true"); cont.focus();
+    const sel=window.getSelection(), r=document.createRange(); r.selectNodeContents(cont); sel.removeAllRanges(); sel.addRange(r);
+  });
+  cont.addEventListener("blur",()=>{
+    elb.classList.remove("editando"); cont.removeAttribute("contenteditable");
+    salvarEdicao(elb.dataset.id, cont.innerText, "md");
+  });
+  cont.addEventListener("keydown",e=>{ if(e.key==="Escape"||(e.key==="Enter"&&(e.ctrlKey||e.metaKey))){ e.preventDefault(); cont.blur(); } });
+}
+/* ── persistência da edição + sincronia MD ⇄ Legível ── */
+function findBloco(id){
+  var lay=DOCS[IDX[docAtual].slug], pgs=(lay&&lay.paginas)||[];
+  for(var i=0;i<pgs.length;i++){ var bs=pgs[i].blocos||[]; for(var j=0;j<bs.length;j++){ if(bs[j].id===id) return bs[j]; } }
+  return null;
+}
+function salvarEdicao(id, texto, origem){
+  var b=findBloco(id); if(!b) return;
+  b.md = (texto||"").trim();
+  if(origem==="md") renderLegivel(_pgAtual); else renderMD(_pgAtual);
+  persistir();
+}
+
+/* ── grava no servidor ──
+   Antes a edição só existia na memória da página: um F5 e ela sumia. Agora vai
+   para PUT /api/document/{id}/edicao, que mantém UM arquivo de edição por
+   documento, sobrescrito — o resultado da extração continua intacto embaixo.
+   Manda o layout inteiro porque é o que o servidor guarda; o debounce evita uma
+   requisição por tecla quando se edita vários blocos seguidos. */
+var _tPersist=null, _persistPend=false, _pgsSujas=new Set();
+function persistir(pg){
+  if(docAtual===null) return;
+  var n=(pg&&pg.n)||(_pgAtual&&_pgAtual.n); if(n) _pgsSujas.add(n);
+  _persistPend=true; marcarEstado("pendente");
+  clearTimeout(_tPersist);
+  _tPersist=setTimeout(enviarEdicao, 800);
+}
+async function enviarEdicao(){
+  if(docAtual===null) return;
+  var d=IDX[docAtual], lay=DOCS[d.slug]; if(!lay) return;
+  // manda so' as paginas mexidas: o layout inteiro do Boletim 100 da' 2,3 MB
+  var sujas=_pgsSujas;
+  var corpo={ layout:(lay.paginas||[]).filter(function(p){ return sujas.has(p.n); })
+                                      .map(function(p){ return {n:p.n, blocos:p.blocos||[]}; }) };
+  if(!corpo.layout.length){ _persistPend=false; marcarEstado(""); return; }
+  marcarEstado("salvando");
+  try{
+    var r=await apiFetch(API+"/document/"+d.id+"/edicao",
+      {method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify(corpo)});
+    if(r.status===429){
+      var espera=parseInt(r.headers.get("Retry-After")||"20",10);
+      marcarEstado("espera", espera);
+      _tPersist=setTimeout(enviarEdicao, (espera+1)*1000);   // reenvia sozinho
+      return;
+    }
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    var j=await r.json();
+    _persistPend=false; _pgsSujas.clear();
+    marcarEstado("salvo", j.editado_em||j.edited_at);
+  }catch(e){
+    marcarEstado("erro", String(e.message||e));
+  }
+}
+async function descartarEdicao(){
+  if(docAtual===null) return;
+  var d=IDX[docAtual];
+  if(!confirm("Descartar as alterações e voltar ao texto que a extração produziu?")) return;
+  try{
+    var r=await apiFetch(API+"/document/"+d.id+"/edicao",{method:"DELETE"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    delete DOCS[d.slug];                 // força recarregar do servidor
+    marcarEstado("");
+    await abrirDoc(docAtual);
+  }catch(e){ marcarEstado("erro", String(e.message||e)); }
+}
+function marcarEstado(estado, extra){
+  var el_=el("edicao-estado"); if(!el_) return;
+  var mapa={
+    pendente:["alteração não salva","#b45309"],
+    salvando:["salvando…","#6b7280"],
+    salvo:["salvo"+(extra?" às "+String(extra).slice(11,16):""),"#15803d"],
+    espera:["limite atingido — salva em "+extra+"s","#b45309"],
+    erro:["não salvou: "+(extra||""),"#b91c1c"]
+  };
+  var m=mapa[estado];
+  el_.style.display = m ? "inline-flex" : "none";
+  if(m){ el_.textContent=m[0]; el_.style.color=m[1]; }
+  el_.dataset.estado = estado || "";
+}
+/* avisa antes de sair com edição pendente */
+window.addEventListener("beforeunload", function(e){
+  if(_persistPend){ e.preventDefault(); e.returnValue=""; }
+});
+
+
+
+/* ── Extração: estado de quem extrai ──
+   Este servidor nao extrai. Aqui aparece o que o lado GPU reporta
+   (POST /api/worker/heartbeat) e o que esta' na fila esperando. */
+/* ── envio de extração pronta (aba Extração) ───────────────────────────────
+   Duas idas ao servidor: /conferir só lê o pacote e diz o que é novo, o que já
+   existe e o que está inválido; /upload grava. A conferência vem antes porque
+   regravar um documento já extraído apaga páginas e blocos que podem ter sido
+   curados à mão — isso tem de ser escolha de alguém, não efeito colateral. */
+var _upArq=null;
+async function baixarLote(){
+  var b=el("btn-lote"), q=parseInt(el("lote-qtd").value||"5",10)||5;
+  var men=el("lote-menores").checked;
+  b.disabled=true; el("lote-info").textContent="Montando o lote…";
+  try{
+    var r=await apiFetch(API+"/extracao/lote?quantos="+q+"&menores="+(men?"true":"false"));
+    if(!r.ok) throw new Error((await r.json().catch(function(){return {};})).detail||("HTTP "+r.status));
+    var nome=((r.headers.get("Content-Disposition")||"").match(/filename="([^"]+)"/)||[])[1]||"lote.zip";
+    var docs=r.headers.get("X-Lote-Documentos"), pags=r.headers.get("X-Lote-Paginas");
+    var a=document.createElement("a");
+    a.href=URL.createObjectURL(await r.blob()); a.download=nome;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+    el("lote-info").innerHTML="<b>"+esc(nome)+"</b><br>"+docs+" documento(s), "+pags+" páginas, ~"+
+      Math.max(1,Math.round(pags*17/60))+" min de GPU";
+  }catch(e){ el("lote-info").textContent="Falhou: "+e.message; }
+  b.disabled=false;
+}
+async function baixarNotebook(){
+  try{
+    var r=await apiFetch(API+"/extracao/notebook.ipynb");
+    if(!r.ok) throw new Error((await r.json().catch(function(){return {};})).detail||("HTTP "+r.status));
+    var a=document.createElement("a");
+    a.href=URL.createObjectURL(await r.blob()); a.download="extrator_lote.ipynb";
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+  }catch(e){ alert("Não deu para baixar o notebook: "+e.message); }
+}
+function _upMsg(html, erro){
+  el("up-resultado").innerHTML='<div style="margin-top:14px;padding:11px 13px;border-radius:8px;font-size:12.5px;line-height:1.6;'+
+    (erro?'background:#fdecec;color:#b42318;border:1px solid #f5c2c2':'background:var(--cinza-bg);border:1px solid var(--borda)')+'">'+html+'</div>';
+}
+var _UP_ROT={novo:"novo",ja_extraido:"já extraído",desconhecido:"fora do acervo",invalido:"inválido",erro:"erro",gravado:"gravado"};
+function _upTabela(itens){
+  return '<table class="up-tab"><thead><tr><th>Documento</th><th>Páginas</th><th>Situação</th><th>Detalhe</th></tr></thead><tbody>'+
+    itens.map(function(it){
+      var st=it._gravado?"gravado":it.situacao;
+      var det=it._gravado ? (it.paginas+" pág, "+it.blocos+" blocos"+(it.figuras?", "+it.figuras+" figuras":"")) : (it.motivo||"");
+      return '<tr><td>'+esc(it.arquivo||it.slug||"?")+'</td><td>'+(it.paginas||"—")+'</td>'+
+             '<td><span class="up-st '+st+'">'+(_UP_ROT[st]||st)+'</span></td><td style="color:var(--cinza)">'+esc(det)+'</td></tr>';
+    }).join("")+'</tbody></table>';
+}
+async function upEscolher(f){
+  el("up-arquivo").value="";
+  if(!f) return;
+  if(!/\.zip$/i.test(f.name)){
+    _upArq=null;
+    _upMsg("<b>"+esc(f.name)+"</b> não é aceito. Só o <b>extracao_….zip</b> que o notebook gera.", true);
+    return;
+  }
+  _upArq=f;
+  _upMsg("Conferindo <b>"+esc(f.name)+"</b> ("+(f.size/1048576).toFixed(1)+" MB)…");
+  try{
+    var fd=new FormData(); fd.append("arquivo", f);
+    var r=await apiFetch(API+"/extracao/conferir",{method:"POST",body:fd});
+    var j=await r.json();
+    if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    var it=j.itens||[];
+    var nov=it.filter(function(x){return x.situacao==="novo";}).length;
+    var dup=it.filter(function(x){return x.situacao==="ja_extraido";}).length;
+    var ruim=it.length-nov-dup;
+    el("up-resultado").innerHTML=
+      '<div style="margin-top:16px;font-size:13px"><b>'+esc(f.name)+'</b>: '+it.length+' documento(s) — '+
+      '<b style="color:#1E5B31">'+nov+' novo(s)</b>, '+
+      '<b style="color:#9a5b00">'+dup+' já extraído(s)</b>'+(ruim?', <b style="color:#b42318">'+ruim+' com problema</b>':'')+'</div>'+
+      _upTabela(it)+
+      '<div class="up-acoes">'+
+        (dup?'<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="up-subst"> '+
+             'Também regravar '+(dup===1?'o documento já extraído':'os '+dup+' já extraídos')+' <span style="color:var(--cinza)">(apaga a extração atual e qualquer edição feita neles)</span></label>':'')+
+        '<button class="up-btn" id="up-gravar" onclick="upGravar()"'+(nov||dup?'':' disabled')+'>Gravar no banco</button>'+
+        '<button class="up-btn sec" onclick="upCancelar()">Cancelar</button>'+
+      '</div>';
+  }catch(e){ _upArq=null; _upMsg("Pacote recusado: "+esc(e.message), true); }
+}
+function upCancelar(){ _upArq=null; el("up-resultado").innerHTML=""; }
+async function upGravar(){
+  if(!_upArq) return;
+  var sub=el("up-subst") && el("up-subst").checked;
+  if(sub && !confirm("Substituir os documentos já extraídos? A extração atual deles, e qualquer edição feita à mão, serão apagadas.")) return;
+  var b=el("up-gravar"); b.disabled=true; b.textContent="Gravando…";
+  try{
+    var fd=new FormData(); fd.append("arquivo",_upArq); fd.append("substituir", sub?"true":"false");
+    var r=await apiFetch(API+"/extracao/upload",{method:"POST",body:fd});
+    var j=await r.json();
+    if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    var linhas=(j.gravados||[]).map(function(g){ g._gravado=true; return g; })
+      .concat(j.pulados||[]).concat(j.falhas||[]);
+    el("up-resultado").innerHTML=
+      '<div style="margin-top:16px;font-size:13px"><b>'+(j.gravados||[]).length+' gravado(s)</b>, '+
+      (j.pulados||[]).length+' pulado(s), '+(j.falhas||[]).length+' com problema.</div>'+_upTabela(linhas);
+    _upArq=null;
+    if((j.gravados||[]).length) carregarDocumentos();
+  }catch(e){ b.disabled=false; b.textContent="Gravar no banco"; _upMsg("Falhou ao gravar: "+esc(e.message), true); }
+}
+(function(){
+  var z=document.getElementById("up-zona"); if(!z) return;
+  ["dragenter","dragover"].forEach(function(ev){ z.addEventListener(ev,function(e){ e.preventDefault(); z.classList.add("sobre"); }); });
+  ["dragleave","drop"].forEach(function(ev){ z.addEventListener(ev,function(e){ e.preventDefault(); z.classList.remove("sobre"); }); });
+  z.addEventListener("drop",function(e){ var f=e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) upEscolher(f); });
+})();
+/* ── VETORIZAÇÃO ──
+   Mesmo desenho da extração: pacote sai daqui, a GPU devolve vetores, o site
+   grava no Qdrant. Tudo é relativo à coleção escolhida: "já vetorizado" quer
+   dizer "já tem pontos NESTA coleção", inclusive os gravados pelos scripts
+   antigos, que só deixaram o nome do arquivo no payload. */
+var VET_COL=null, VET_COLS=[], VET_DOCS=[], VET_SEL=new Set(), VET_FILTRO="nao", VET_PRE=null, _vetArq=null, _tVet=null, VET_MAX=100;
+function irVetorizacao(pre){
+  el("view-home").style.display="none"; el("view-extract").style.display="none";
+  el("view-gpu").style.display="none"; el("view-equipe").style.display="none";
+  el("view-vet").style.display="block";
+  el("topbar-tit").textContent="Vetorização"; setNav("vet");
+  var pode=(CARGO!=="leitor");
+  el("vet-acoes").style.display=pode?"block":"none";
+  el("vet-nova").style.display=(CARGO==="admin")?"flex":"none";
+  if(pre && pre.length){ VET_PRE=pre; VET_FILTRO="todos"; }
+  vetCarregarColecoes();
+  vetCapacidade();
+}
+async function vetCarregarColecoes(escolher){
+  var sel=el("vet-col");
+  try{
+    var r=await apiFetch(API+"/vetorizacao/colecoes"); var j=await r.json();
+    if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    VET_COLS=j;
+    var guardada=null; try{ guardada=localStorage.getItem("sb100_vet_col"); }catch(_){}
+    var alvo=escolher||VET_COL||guardada;
+    if(!VET_COLS.some(function(c){ return c.nome===alvo&&c.compativel; })){
+      var sb=VET_COLS.filter(function(c){ return c.nome==="sb100"&&c.compativel; })[0];
+      var prim=VET_COLS.filter(function(c){ return c.compativel&&!c.teste; })[0]||VET_COLS.filter(function(c){ return c.compativel; })[0];
+      alvo=(sb||prim||{}).nome||null;
+    }
+    sel.innerHTML=VET_COLS.map(function(c){
+      return '<option value="'+esc(c.nome)+'"'+(c.compativel?'':' disabled')+(c.nome===alvo?' selected':'')+'>'+
+        esc(c.nome)+' ('+c.pontos.toLocaleString("pt-BR")+' pontos)'+(c.teste?' [teste]':'')+(c.compativel?'':' — incompatível')+'</option>';
+    }).join("");
+    VET_COL=alvo;
+    await vetCarregarDocs();
+  }catch(e){ sel.innerHTML='<option>Qdrant indisponível</option>'; el("vet-docs").innerHTML='<div class="md-vazio">'+esc(e.message)+'</div>'; }
+}
+function vetTrocarColecao(){
+  VET_COL=el("vet-col").value; VET_SEL.clear();
+  try{ localStorage.setItem("sb100_vet_col", VET_COL); }catch(_){}
+  vetCarregarDocs();
+}
+async function vetCriarColecao(){
+  var nome=(el("vet-nova-nome").value||"").trim();
+  if(!nome) return;
+  if(!confirm("Criar a coleção "+nome+" no Qdrant?")) return;
+  try{
+    var r=await apiFetch(API+"/vetorizacao/colecoes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nome:nome})});
+    var j=await r.json(); if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    el("vet-nova-nome").value=""; VET_SEL.clear();
+    try{ localStorage.setItem("sb100_vet_col", j.nome); }catch(_){}
+    await vetCarregarColecoes(j.nome);
+  }catch(e){ alert("Não criou: "+e.message); }
+}
+async function vetCarregarDocs(){
+  var c=VET_COLS.filter(function(x){ return x.nome===VET_COL; })[0];
+  el("vet-badge-pontos").textContent=c?c.pontos.toLocaleString("pt-BR"):"—";
+  el("vet-col-info").textContent=c?(c.teste?"coleção de teste":""):"";
+  if(!VET_COL){ el("vet-docs").innerHTML='<div class="md-vazio">Nenhuma coleção compatível.</div>'; return; }
+  el("vet-docs").innerHTML='<div class="md-vazio">Conferindo o que já está em '+esc(VET_COL)+'…</div>';
+  // a resposta de uma coleção trocada no meio do caminho chega depois e não
+  // pode sobrescrever a da coleção escolhida agora
+  var col=VET_COL;
+  try{
+    var r=await apiFetch(API+"/vetorizacao/documentos?colecao="+encodeURIComponent(col));
+    var j=await r.json(); if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    if(col!==VET_COL) return;
+    VET_DOCS=j;
+  }catch(e){ if(col===VET_COL) el("vet-docs").innerHTML='<div class="md-vazio">'+esc(e.message)+'</div>'; return; }
+  if(VET_PRE){
+    var ids=new Set(VET_PRE); VET_PRE=null;
+    VET_DOCS.forEach(function(d){ if(ids.has(d.pdf_id)&&!d.vetorizado) VET_SEL.add(d.pdf_id); });
+    if(VET_SEL.size) VET_FILTRO="nao";
+  }
+  var feitos=VET_DOCS.filter(function(d){ return d.vetorizado; }).length;
+  el("vet-badge-feitos").textContent=feitos+" de "+VET_DOCS.length;
+  el("uso-col").textContent=VET_COL;
+  el("uso-txt").textContent=feitos+" de "+VET_DOCS.length+" extraídos nela";
+  el("uso-barra").style.width=(VET_DOCS.length?Math.round(100*feitos/VET_DOCS.length):0)+"%";
+  vetFiltro(VET_FILTRO);
+  if(CARGO!=="leitor") vetCarregarPendentes();
+}
+function vetFiltro(f){
+  VET_FILTRO=f;
+  ["nao","sim","todos"].forEach(function(k){ el("vf-"+k).classList.toggle("ativo",k===f); });
+  vetRender();
+}
+function _vetComo(d){
+  if(!d.vetorizado) return '<span class="up-st nao">não vetorizado</span>';
+  var c=d.como||{};
+  if(c.pendente) return '<span class="up-st ja_vetorizado">'+d.pontos+' pontos</span> <span style="color:#9a5b00">aguardando confirmação</span>';
+  if(c.legado) return '<span class="up-st legado">scripts antigos</span> <span style="color:var(--cinza)">'+d.pontos+' pontos</span>';
+  return '<span class="up-st ja_vetorizado">'+d.pontos+' pontos</span> <span style="color:var(--cinza)">'+
+    (c.chunk?c.chunk+'/'+c.overlap:'')+(d.quando?' · '+_quando(d.quando):'')+(c.origem==="edicao"?' · texto editado':'')+'</span>';
+}
+function vetVisiveis(){
+  var q=(el("vet-busca").value||"").toLowerCase();
+  return VET_DOCS.filter(function(d){
+    if(VET_FILTRO==="nao"&&d.vetorizado) return false;
+    if(VET_FILTRO==="sim"&&!d.vetorizado) return false;
+    return !q||((d.titulo||"")+" "+d.arquivo).toLowerCase().indexOf(q)>=0;
+  });
+}
+function vetRender(){
+  var v=vetVisiveis();
+  if(!v.length){ el("vet-docs").innerHTML='<div class="md-vazio">'+
+    (VET_FILTRO==="nao"?'Todos os documentos extraídos já estão em '+esc(VET_COL)+'.':'Nada com esse filtro.')+'</div>'; vetSelInfo(); return; }
+  var todos=v.every(function(d){ return VET_SEL.has(d.pdf_id); });
+  el("vet-docs").innerHTML='<table class="up-tab"><thead><tr><th style="width:28px"><input type="checkbox" '+(todos?'checked ':'')+
+    'onclick="vetTodos(this.checked)" title="selecionar os visíveis"></th><th>Documento</th><th>Ano</th><th>Pág.</th><th>Nesta coleção</th></tr></thead><tbody>'+
+    v.map(function(d){
+      return '<tr><td><input type="checkbox" data-id="'+esc(d.pdf_id)+'" '+(VET_SEL.has(d.pdf_id)?'checked ':'')+'onclick="vetSel(this)"></td>'+
+        '<td><div style="font-weight:600">'+esc((d.titulo||d.arquivo).slice(0,110))+(d.editado?'<span class="vet-chip" title="tem correção manual; ela é que vai para o Qdrant">editado</span>':'')+'</div>'+
+        '<div style="color:var(--cinza);font-size:11.5px">'+esc(d.arquivo)+'</div></td>'+
+        '<td>'+esc(d.ano||"—")+'</td><td>'+(d.paginas||"—")+'</td><td>'+_vetComo(d)+'</td></tr>';
+    }).join("")+'</tbody></table>';
+  vetSelInfo();
+}
+function vetSel(cb){ var id=cb.getAttribute("data-id"); if(cb.checked) VET_SEL.add(id); else VET_SEL.delete(id); vetSelInfo(); }
+function vetTodos(on){ vetVisiveis().forEach(function(d){ if(on) VET_SEL.add(d.pdf_id); else VET_SEL.delete(d.pdf_id); }); vetRender(); }
+function vetLimparSel(){ VET_SEL.clear(); vetRender(); }
+function vetSelInfo(){
+  var sel=VET_DOCS.filter(function(d){ return VET_SEL.has(d.pdf_id); });
+  var ja=sel.filter(function(d){ return d.vetorizado; }).length;
+  var pags=sel.reduce(function(a,d){ return a+(d.paginas||0); },0);
+  var n=sel.length;
+  el("vet-sel-info").innerHTML=!n?"Nenhum selecionado":
+    ('<b>'+n+'</b> selecionado(s), '+pags+' páginas, para <b>'+esc(VET_COL)+'</b>'+
+     (ja?' <span style="color:#9a5b00">('+ja+' já estão nesta coleção e serão pulados, a menos que você peça para regravar)</span>':'')+
+     (n>VET_MAX?' <span style="color:#b42318">máximo de '+VET_MAX+' por pacote</span>':''));
+  var ok=n>0&&n<=VET_MAX;
+  el("vet-btn-pacote").disabled=!ok;
+  el("vet-btn-site").disabled=!ok||!(_VET_CAP&&_VET_CAP.pode);
+}
+async function vetBaixarPacote(){
+  var ids=Array.from(VET_SEL); if(!ids.length) return;
+  var b=el("vet-btn-pacote"); b.disabled=true; el("vet-pacote-info").textContent="Montando o pacote…";
+  try{
+    var r=await apiFetch(API+"/vetorizacao/pacote",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({colecao:VET_COL,ids:ids})});
+    if(!r.ok) throw new Error((await r.json().catch(function(){return {};})).detail||("HTTP "+r.status));
+    var nome=((r.headers.get("Content-Disposition")||"").match(/filename="([^"]+)"/)||[])[1]||"pacote.zip";
+    var a=document.createElement("a"); a.href=URL.createObjectURL(await r.blob()); a.download=nome;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+    el("vet-pacote-info").innerHTML="<b>"+esc(nome)+"</b><br>"+ids.length+" documento(s) para "+esc(VET_COL);
+  }catch(e){ el("vet-pacote-info").textContent="Falhou: "+e.message; }
+  b.disabled=false;
+}
+async function vetBaixarNotebook(){
+  try{
+    var r=await apiFetch(API+"/vetorizacao/notebook.ipynb");
+    if(!r.ok) throw new Error((await r.json().catch(function(){return {};})).detail||("HTTP "+r.status));
+    var a=document.createElement("a"); a.href=URL.createObjectURL(await r.blob()); a.download="vetorizador_lote.ipynb";
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+  }catch(e){ alert("Não deu para baixar o notebook: "+e.message); }
+}
+function _vetMsg(html, erro){
+  el("vet-resultado").innerHTML='<div style="margin-top:14px;padding:11px 13px;border-radius:8px;font-size:12.5px;line-height:1.6;'+
+    (erro?'background:#fdecec;color:#b42318;border:1px solid #f5c2c2':'background:var(--cinza-bg);border:1px solid var(--borda)')+'">'+html+'</div>';
+}
+var _VET_ROT={novo:"novo",ja_vetorizado:"já na coleção",desconhecido:"fora do acervo",invalido:"inválido",erro:"erro",gravado:"gravado"};
+function _vetTabela(itens){
+  return '<table class="up-tab"><thead><tr><th>Documento</th><th>Trechos</th><th>Situação</th><th>Detalhe</th></tr></thead><tbody>'+
+    itens.map(function(it){
+      var st=it._gravado?"gravado":it.situacao;
+      var det=it._gravado?(it.pontos+" pontos gravados"):(it.motivo||"");
+      return '<tr><td>'+esc(it.titulo||it.arquivo||"?")+'</td><td>'+(it.trechos||"—")+'</td>'+
+        '<td><span class="up-st '+st+'">'+(_VET_ROT[st]||st)+'</span></td><td style="color:var(--cinza)">'+esc(det)+'</td></tr>';
+    }).join("")+'</tbody></table>';
+}
+async function vetEscolher(f){
+  el("vet-arquivo").value="";
+  if(!f) return;
+  if(!/\.zip$/i.test(f.name)){ _vetArq=null; _vetMsg("<b>"+esc(f.name)+"</b> não é aceito. Só o <b>vetores_….zip</b> que o vetorizador gera.", true); return; }
+  _vetArq=f;
+  _vetMsg("Conferindo <b>"+esc(f.name)+"</b> ("+(f.size/1048576).toFixed(1)+" MB)…");
+  try{
+    var fd=new FormData(); fd.append("arquivo", f);
+    var r=await apiFetch(API+"/vetorizacao/conferir",{method:"POST",body:fd});
+    var j=await r.json(); if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    var it=j.itens||[];
+    var nov=it.filter(function(x){return x.situacao==="novo";}).length;
+    var dup=it.filter(function(x){return x.situacao==="ja_vetorizado";}).length;
+    var ruim=it.length-nov-dup;
+    var outra=(j.colecao!==VET_COL);
+    el("vet-resultado").innerHTML=
+      '<div style="margin-top:16px;font-size:13px"><b>'+esc(f.name)+'</b> vai para a coleção <b>'+esc(j.colecao)+'</b>: '+
+      it.length+' documento(s), <b style="color:#1E5B31">'+nov+' novo(s)</b>, <b style="color:#9a5b00">'+dup+' já na coleção</b>'+
+      (ruim?', <b style="color:#b42318">'+ruim+' com problema</b>':'')+'</div>'+
+      (outra?'<div style="font-size:12.5px;color:#9a5b00;margin-top:4px">O pacote foi feito para '+esc(j.colecao)+', não para a coleção escolhida acima ('+esc(VET_COL)+'). Vale a do pacote.</div>':'')+
+      (j.avisos||[]).map(function(a){ return '<div style="font-size:12.5px;color:#9a5b00;margin-top:4px">'+esc(a)+'</div>'; }).join("")+
+      _vetTabela(it)+
+      '<div class="up-acoes">'+
+        (dup?'<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="vet-subst"> '+
+          'Também regravar '+(dup===1?'o documento que já está':'os '+dup+' que já estão')+' na coleção <span style="color:var(--cinza)">(apaga os pontos atuais dele, inclusive os dos scripts antigos)</span></label>':'')+
+        '<button class="up-btn" id="vet-gravar" onclick="vetGravar()"'+(nov||dup?'':' disabled')+'>Gravar no Qdrant</button>'+
+        '<button class="up-btn sec" onclick="vetCancelar()">Cancelar</button>'+
+      '</div>';
+  }catch(e){ _vetArq=null; _vetMsg("Pacote recusado: "+esc(e.message), true); }
+}
+function vetCancelar(){ _vetArq=null; el("vet-resultado").innerHTML=""; }
+async function vetGravar(){
+  if(!_vetArq) return;
+  var sub=el("vet-subst")&&el("vet-subst").checked;
+  if(sub&&!confirm("Apagar os pontos atuais desses documentos na coleção e gravar os novos?")) return;
+  var b=el("vet-gravar"); b.disabled=true; b.textContent="Gravando…";
+  try{
+    var fd=new FormData(); fd.append("arquivo",_vetArq); fd.append("substituir", sub?"true":"false");
+    var r=await apiFetch(API+"/vetorizacao/upload",{method:"POST",body:fd});
+    var j=await r.json(); if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    _vetResumo(j);
+    _vetArq=null;
+  }catch(e){ b.disabled=false; b.textContent="Gravar no Qdrant"; _vetMsg("Falhou ao gravar: "+esc(e.message), true); }
+}
+function _vetResumo(j){
+  var linhas=(j.gravados||[]).map(function(g){ g._gravado=true; return g; }).concat(j.pulados||[]).concat(j.falhas||[]);
+  el("vet-resultado").innerHTML='<div style="margin-top:16px;font-size:13px">Coleção <b>'+esc(j.colecao)+'</b>: <b>'+
+    (j.gravados||[]).length+' gravado(s)</b>, '+(j.pulados||[]).length+' pulado(s), '+(j.falhas||[]).length+' com problema.</div>'+_vetTabela(linhas);
+  if((j.gravados||[]).length){ VET_SEL.clear(); vetCarregarColecoes(j.colecao); carregarDocumentos(); }
+}
+async function vetCarregarPendentes(){
+  var box=el("vet-pendentes"), col=VET_COL; if(!col) return;
+  box.textContent="Conferindo "+col+" no Qdrant…";
+  try{
+    var r=await apiFetch(API+"/vetorizacao/pendentes?colecao="+encodeURIComponent(col));
+    var j=await r.json(); if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    if(col!==VET_COL) return;
+    if(!j.length){ box.textContent="Nada pendente em "+col+"."; return; }
+    box.innerHTML='<table class="up-tab"><thead><tr><th style="width:28px"></th><th>Documento</th><th>Pontos</th><th>Gravado em</th><th>Situação</th></tr></thead><tbody>'+
+      j.map(function(d){
+        var ok=d.completo&&d.no_acervo;
+        return '<tr><td><input type="checkbox" class="vet-pend" value="'+esc(d.pdf_id)+'"'+(ok?' checked':' disabled')+'></td>'+
+          '<td>'+esc((d.titulo||d.arquivo||d.pdf_id).slice(0,100))+'</td><td>'+d.pontos+'</td><td>'+_quando(d.ingestao)+'</td>'+
+          '<td>'+(!d.no_acervo?'<span class="up-st invalido">fora do acervo</span>':!d.completo?'<span class="up-st invalido">incompleto</span> rode de novo':
+            '<span class="up-st novo">'+(d.ja_registrado?'regravado':'novo')+'</span>')+'</td></tr>';
+      }).join("")+'</tbody></table>'+
+      '<div class="up-acoes"><button class="up-btn" id="vet-btn-confirmar" onclick="vetConfirmar()">Confirmar vetorização</button></div>';
+  }catch(e){ if(col===VET_COL) box.textContent="Não deu para conferir: "+e.message; }
+}
+async function vetConfirmar(){
+  var ids=[].map.call(document.querySelectorAll(".vet-pend:checked"), function(c){ return c.value; });
+  if(!ids.length) return;
+  var b=el("vet-btn-confirmar"); b.disabled=true; b.textContent="Confirmando…";
+  try{
+    var r=await apiFetch(API+"/vetorizacao/confirmar",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({colecao:VET_COL,ids:ids})});
+    var j=await r.json(); if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    _vetMsg('<b>'+j.confirmados.length+' confirmado(s)</b> em '+esc(j.colecao)+
+      (j.recusados.length?', '+j.recusados.length+' recusado(s): '+j.recusados.map(function(x){ return esc((x.titulo||x.arquivo||x.pdf_id)+": "+x.motivo); }).join("; "):''));
+    VET_SEL.clear(); vetCarregarColecoes(j.colecao); carregarDocumentos();
+  }catch(e){ b.disabled=false; b.textContent="Confirmar vetorização"; _vetMsg("Falhou ao confirmar: "+esc(e.message), true); }
+}
+var _VET_CAP=null;
+async function vetCapacidade(){
+  var box=el("vet-cap");
+  try{
+    var r=await apiFetch(API+"/vetorizacao/capacidade"); var j=await r.json();
+    if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    _VET_CAP=j;
+    el("vet-badge-cpu").textContent=j.pode?"calcula":"só GPU";
+    box.innerHTML=j.pode
+      ?'<span style="color:#1E5B31;font-weight:700">Disponível.</span> CPU com AVX'+(j.torch_cpu?' ('+esc(j.torch_cpu)+')':'')+'. Bem mais lento que GPU: use para poucos documentos.'
+      :'<span style="color:#b42318;font-weight:700">Indisponível aqui.</span> '+esc((j.motivo||"").charAt(0).toUpperCase()+(j.motivo||"").slice(1));
+  }catch(e){ _VET_CAP=null; el("vet-badge-cpu").textContent="?"; box.textContent="Não deu para verificar: "+e.message; }
+  vetSelInfo();
+}
+async function vetNoSite(){
+  var ids=Array.from(VET_SEL); if(!ids.length) return;
+  if(!confirm("Vetorizar "+ids.length+" documento(s) em "+VET_COL+" aqui no servidor?")) return;
+  el("vet-btn-site").disabled=true;
+  try{
+    var r=await apiFetch(API+"/vetorizacao/no-site",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({colecao:VET_COL,ids:ids})});
+    var j=await r.json(); if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    el("vet-tarefa").textContent=j.estado+"…";
+    clearInterval(_tVet);
+    _tVet=setInterval(async function(){
+      try{
+        var t=await (await apiFetch(API+"/vetorizacao/tarefa/"+j.tarefa)).json();
+        el("vet-tarefa").textContent=t.estado+(t.erro?": "+t.erro:"…");
+        if(t.estado==="concluído"||t.estado==="falhou"){ clearInterval(_tVet); vetSelInfo();
+          if(t.resultado) _vetResumo(t.resultado); }
+      }catch(e){ clearInterval(_tVet); el("vet-tarefa").textContent="Perdi a tarefa: "+e.message; }
+    }, 5000);
+  }catch(e){ el("vet-tarefa").textContent="Recusado: "+e.message; vetSelInfo(); }
+}
+(function(){
+  var z=document.getElementById("vet-zona"); if(!z) return;
+  ["dragenter","dragover"].forEach(function(ev){ z.addEventListener(ev,function(e){ e.preventDefault(); z.classList.add("sobre"); }); });
+  ["dragleave","drop"].forEach(function(ev){ z.addEventListener(ev,function(e){ e.preventDefault(); z.classList.remove("sobre"); }); });
+  z.addEventListener("drop",function(e){ var f=e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) vetEscolher(f); });
+})();
+var _tGpu=null;
+function irExtracaoGPU(){
+  el("view-home").style.display="none"; el("view-extract").style.display="none"; el("view-equipe").style.display="none"; el("view-vet").style.display="none";
+  el("view-gpu").style.display="block";
+  var uc=el("up-card"); if(uc) uc.style.display=(CARGO==="leitor")?"none":"block";
+  el("topbar-tit").textContent="Extração"; setNav("gpu");
+  atualizarGPU();
+  clearInterval(_tGpu); _tGpu=setInterval(atualizarGPU, 15000);   // heartbeat e' periodico
+}
+function _card(tit, corpo, cor){
+  return '<div style="background:#fff;border:1px solid var(--borda);border-left:4px solid '+cor+
+         ';border-radius:12px;padding:16px 18px"><div style="font-size:11px;font-weight:700;'+
+         'letter-spacing:.6px;text-transform:uppercase;color:var(--cinza);margin-bottom:8px">'+tit+
+         '</div>'+corpo+'</div>';
+}
+async function atualizarGPU(){
+  if(el("view-gpu").style.display==="none"){ clearInterval(_tGpu); return; }
+  var w={conectado:false}, fila=[];
+  try{ w=await (await apiFetch(API+"/worker")).json(); }catch(e){ w={conectado:false,motivo:e.message}; }
+  try{ fila=await (await apiFetch(API+"/fila")).json(); }catch(e){ fila=[]; }
+  var est=w.estado||{};
+  el("gpu-badge-estado").textContent = w.conectado ? (est.rodando?"Extraindo":"Ocioso") : "Offline";
+  el("gpu-badge-fila").textContent   = fila.length;
+  el("gpu-badge-sinal").textContent  = w.conectado ? (w.segundos_desde||0)+"s" : "—";
+  el("gpu-detalhe").innerHTML = w.conectado
+    ? esc([est.gpu, est.documento && String(est.documento).slice(0,38),
+           est.pagina && ("página "+est.pagina+(est.total_paginas?" de "+est.total_paginas:""))]
+          .filter(Boolean).join(" · "))
+    : esc(w.motivo||"nenhum sinal nos últimos 3 minutos")+" — o script de extração não está reportando.";
+  el("gpu-fila").innerHTML = fila.length
+    ? fila.map(function(x){ return ''+
+        '<div class="linha"><div class="linha-doc" style="padding-left:14px">'+
+        '<div class="linha-tit">'+esc(x.pdf_file)+'</div>'+
+        '<div class="linha-meta">'+(x.total_pages||0)+' páginas · pedido em '+_quando(x.extraction_requested_at)+
+        ' · por <b>'+esc(x.extraction_requested_by||"—")+'</b></div></div>'+
+        '<div style="padding-right:16px"><span class="mini-chip fila">na fila</span></div></div>'; }).join("")
+    : '<div class="md-vazio">Nada na fila. Peça a extração de um documento na Home ou ao abri-lo.</div>';
+}
+
+/* ── curadoria (Squad 1) ──
+   A API so' e' consultada quando se clica: bater nela a cada visita custaria ~250
+   registros por pageview sem necessidade. Ao abrir, o site mostra apenas QUANDO
+   foi a ultima checagem, lida do historico. */
+async function mostrarUltimaSync(){
+  var el_=el("sync-quando"); if(!el_) return;
+  try{
+    var r=await apiFetch(API+"/curadoria/ultima");
+    if(!r.ok){ el_.textContent=""; return; }
+    var j=await r.json();
+    if(j.nunca){ el_.textContent="nunca sincronizado — clique em Buscar novos"; return; }
+    var res=j.resumo||{};
+    if(res.aprovados){ TOTAL_CURADORIA=res.aprovados; renderHome(); }
+    el_.textContent="última checagem "+_quando(j.quando)+
+      (res.novos!=null ? " · "+res.novos+" novo(s) na curadoria" : "");
+  }catch(e){ el_.textContent=""; }
+}
+async function sincronizarCuradoria(){
+  var b=el("btn-sync"); if(b.disabled) return;
+  b.disabled=true; var antes=b.textContent; b.textContent="Consultando…";
+  try{
+    var r=await apiFetch(API+"/curadoria/sincronizar",{method:"POST"});
+    var j=await r.json();
+    if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    var lista = (j.novos_exemplos||[]).map(function(n){
+      return '<li style="margin:2px 0">'+esc(n)+'</li>'; }).join("");
+    abrirPainel("Curadoria — "+j.na_api+" artigos na API",
+      '<div style="font-size:13px;line-height:1.9">'+
+      '<div><b>'+j.aprovados+'</b> aprovados (não rejeitados)</div>'+
+      '<div><b>'+j.ja_conhecidos+'</b> já no banco — metadados atualizados: <b>'+j.atualizados+'</b></div>'+
+      '<div><b>'+j.novos+'</b> na curadoria e ainda não no banco</div></div>'+
+      (lista?'<div style="margin-top:12px;font-size:12.5px"><b>Novos:</b><ul style="margin:6px 0 0 18px;padding:0">'+lista+
+        (j.novos>25?'<li style="color:var(--cinza)">… e outros '+(j.novos-25)+'</li>':'')+'</ul></div>':'')+
+      '<div style="margin-top:14px;padding:10px 12px;background:#f8f8f8;border:1px solid var(--borda);border-radius:8px;font-size:11.5px;color:var(--cinza);line-height:1.6">'+
+      'Isto atualiza os <b>metadados</b> do que já está no banco e lista o que apareceu na curadoria. '+
+      'Registrar um documento novo depende do PDF em si, que vem por outro caminho.</div>');
+    await carregarDocumentos(); renderHome(); mostrarUltimaSync();
+  }catch(e){
+    abrirPainel("Não deu para sincronizar",
+      '<p style="font-size:13px">'+esc(String(e.message||e))+'</p>'+
+      '<div style="margin-top:10px;font-size:12px;color:var(--cinza)">A API de curadoria pode estar fora do ar. Os documentos já no banco continuam disponíveis.</div>');
+  }finally{ b.disabled=false; b.textContent=antes; }
+}
+
+
+var EQUIPE = [], MEU_ID = null;
+/* Editar e remover: so' admin, e o backend confere de novo — o botao escondido
+   no front nao e' protecao, e' conveniencia. */
+async function editarIntegrante(uid){
+  var p = (EQUIPE||[]).filter(function(x){return x.id===uid;})[0] || {};
+  var nome = prompt("Nome de "+(p.name||"integrante")+":", p.name||"");
+  if(nome===null) return;
+  var cargo = prompt("Cargo (admin, curador ou leitor):", p.role||"curador");
+  if(cargo===null) return;
+  cargo = String(cargo).trim().toLowerCase();
+  var senha = prompt("Nova senha (deixe em branco para nao trocar):", "");
+  if(senha===null) return;
+  var corpo = {nome: nome.trim(), cargo: cargo};
+  if(senha.trim()) corpo.senha = senha.trim();
+  try{
+    var r = await apiFetch(API+"/equipe/"+uid, {method:"PATCH",
+      headers:{"Content-Type":"application/json"}, body:JSON.stringify(corpo)});
+    var j = await r.json();
+    if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    await carregarEquipe();
+    abrirPainel("Integrante atualizado",
+      '<div style="font-size:13px;line-height:1.8"><b>'+esc(j.name||nome)+'</b> — '+esc(j.role||cargo)+'</div>'+
+      (corpo.senha ? '<div style="margin-top:12px;padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;'+
+        'border-radius:8px;font-size:12px;color:#7c2d12">A senha foi trocada. Passe a nova por um canal seguro.</div>' : ''));
+  }catch(e){
+    abrirPainel("Nao deu para editar", '<p style="font-size:13px">'+esc(String(e.message||e))+'</p>');
+  }
+}
+async function removerIntegrante(uid, nome){
+  if(!confirm('Remover "'+nome+'"?\n\nA conta deixa de existir e a pessoa perde o acesso. Nao da para desfazer.')) return;
+  try{
+    var r = await apiFetch(API+"/equipe/"+uid, {method:"DELETE"});
+    var j = await r.json();
+    if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    await carregarEquipe();
+  }catch(e){
+    abrirPainel("Nao deu para remover", '<p style="font-size:13px">'+esc(String(e.message||e))+'</p>');
+  }
+}
+
+
+/* ── cabecalho recolhivel, busca e paginacao ──
+   O cabecalho ocupava um terco da tela sem que a informacao mudasse a cada
+   visita. Recolhido, mostra os numeros numa linha; clicando, abre o resto.
+   A escolha fica guardada na sessao. */
+var HERO_ABERTO = false, BUSCA = "", POR_PAGINA = 20, MOSTRANDO = 20;
+function alternarHero(){
+  HERO_ABERTO = !HERO_ABERTO;
+  aplicarHero();
+  try{ sessionStorage.setItem("sb100_hero", HERO_ABERTO ? "1" : "0"); }catch(_){}
+}
+function aplicarHero(){
+  var h=el("hero-home"); if(!h) return;
+  h.classList.toggle("recolhido", !HERO_ABERTO);
+  h.title = HERO_ABERTO ? "Clique para recolher" : "Clique para expandir";
+}
+function resumoHero(){
+  var r=el("hero-resumo"); if(!r) return;
+  var noBanco=IDX.length;
+  r.innerHTML =
+    (TOTAL_CURADORIA ? '<span><b>'+noBanco+'</b> de '+TOTAL_CURADORIA+' baixados</span>' :
+                       '<span><b>'+noBanco+'</b> documentos</span>')+
+    '<span><b>'+extraidos.size+'</b> extraídos</span>'+
+    '<span><b>'+vetorizados.size+'</b> vetorizados</span>';
+}
+function buscar(v){
+  BUSCA=(v||"").trim().toLowerCase();
+  MOSTRANDO=POR_PAGINA||1e9;
+  var x=el("busca-x"); if(x) x.style.display = BUSCA ? "block" : "none";
+  renderHome();
+}
+function limparBusca(){ var b=el("busca"); if(b){ b.value=""; b.focus(); } buscar(""); }
+function mudarPorPagina(v){
+  POR_PAGINA = parseInt(v,10)||0;          // 0 = todos
+  MOSTRANDO = POR_PAGINA || 1e9;
+  try{ sessionStorage.setItem("sb100_pp", String(POR_PAGINA)); }catch(_){}
+  renderHome();
+}
+function carregarMais(){ MOSTRANDO += (POR_PAGINA||20); renderHome();
+  window.scrollBy({top:200, behavior:"smooth"}); }
+function casaBusca(d){
+  if(!BUSCA) return true;
+  var m=d.meta||{};
+  return [m.titulo, m.autores, m.periodico, m.ano, m.doi, d.arquivo]
+    .filter(Boolean).join(" ").toLowerCase().indexOf(BUSCA) >= 0;
+}
+function renderPaginacao(total){
+  var el_=el("paginacao"); if(!el_) return;
+  var vendo=Math.min(MOSTRANDO,total);
+  if(!total){ el_.innerHTML=""; return; }
+  var info=el("busca-info");
+  if(info) info.textContent = BUSCA ? (total+" resultado"+(total===1?"":"s")) : "";
+  el_.innerHTML = '<span><b>'+vendo+'</b> de <b>'+total+'</b> documento'+(total===1?'':'s')+'</span>'+
+    (vendo<total ? '<button class="btn-mais" onclick="carregarMais()">Carregar mais</button>' : '');
+}
+/* ── conta ──
+   Menu no avatar, como em qualquer serviço: minha conta, historico e sair.
+   Trocar e-mail ou senha pede a senha ATUAL — sem isso, um computador deixado
+   aberto vira sequestro de conta. */
+var MEU_EMAIL = null;
+function alternarMenuConta(ev){
+  if(ev) ev.stopPropagation();
+  var m=el("menu-conta");
+  var abrir = m.style.display==="none";
+  m.style.display = abrir ? "block" : "none";
+  if(abrir){
+    el("mc-nome").textContent = USUARIO || "—";
+    el("mc-email").textContent = MEU_EMAIL || "";
+  }
+}
+function fecharMenuConta(){ var m=el("menu-conta"); if(m) m.style.display="none"; }
+document.addEventListener("click", function(e){
+  var m=el("menu-conta"), u=el("sb-user");
+  if(m && m.style.display!=="none" && !m.contains(e.target) && u && !u.contains(e.target)) fecharMenuConta();
+});
+function pintarUsuario(){
+  var av=document.querySelector(".sb-user .av");
+  if(av) av.textContent=((USUARIO||"US").slice(0,2)).toUpperCase();
+  var n=el("sb-nome"), sub=el("sb-sub");
+  if(n) n.textContent = USUARIO || "—";
+  if(sub) sub.textContent = (CARGO||"") + (MEU_EMAIL ? " · " + MEU_EMAIL : "");
+}
+function abrirMinhaConta(){
+  fecharMenuConta();
+  abrirPainel("Minha conta",
+    '<div class="cf-sec">'+
+      '<h4>Perfil</h4><p>Como seu nome aparece para a equipe.</p>'+
+      '<div class="cf-linha"><div><label class="eq-lbl">Nome</label>'+
+      '<input id="cf-nome" class="eq-inp" value="'+esc(USUARIO||"")+'"></div>'+
+      '<div><label class="eq-lbl">Cargo</label>'+
+      '<input class="eq-inp" value="'+esc(CARGO||"")+'" disabled title="Só um administrador altera cargos"></div></div>'+
+      '<button class="eq-btn" onclick="salvarConta(\'nome\')">Salvar nome</button>'+
+      '<div class="cf-msg" id="cf-msg-nome"></div>'+
+    '</div>'+
+    '<div class="cf-sec">'+
+      '<h4>E-mail</h4><p>É com ele que você entra. Exige a senha atual.</p>'+
+      '<div class="cf-linha"><div><label class="eq-lbl">Novo e-mail</label>'+
+      '<input id="cf-email" type="email" class="eq-inp" value="'+esc(MEU_EMAIL||"")+'"></div>'+
+      '<div><label class="eq-lbl">Senha atual</label>'+
+      '<input id="cf-senha-email" type="password" class="eq-inp" autocomplete="current-password"></div></div>'+
+      '<button class="eq-btn" onclick="salvarConta(\'email\')">Alterar e-mail</button>'+
+      '<div class="cf-msg" id="cf-msg-email"></div>'+
+    '</div>'+
+    '<div class="cf-sec">'+
+      '<h4>Senha</h4><p>Mínimo de 8 caracteres. Você precisará entrar de novo.</p>'+
+      '<div class="cf-linha"><div><label class="eq-lbl">Senha atual</label>'+
+      '<input id="cf-atual" type="password" class="eq-inp" autocomplete="current-password"></div>'+
+      '<div><label class="eq-lbl">Nova senha</label>'+
+      '<input id="cf-nova" type="password" class="eq-inp" autocomplete="new-password"></div></div>'+
+      '<button class="eq-btn" onclick="salvarConta(\'senha\')">Alterar senha</button>'+
+      '<div class="cf-msg" id="cf-msg-senha"></div>'+
+    '</div>');
+}
+async function salvarConta(qual){
+  var corpo={}, alvo="cf-msg-"+qual;
+  if(qual==="nome"){ corpo.nome=el("cf-nome").value.trim();
+    if(!corpo.nome){ msgConta(alvo,"Informe um nome.",true); return; } }
+  if(qual==="email"){ corpo.email=el("cf-email").value.trim(); corpo.senha_atual=el("cf-senha-email").value;
+    if(!corpo.email||!corpo.senha_atual){ msgConta(alvo,"Preencha o e-mail e a senha atual.",true); return; } }
+  if(qual==="senha"){ corpo.senha_nova=el("cf-nova").value; corpo.senha_atual=el("cf-atual").value;
+    if(!corpo.senha_nova||!corpo.senha_atual){ msgConta(alvo,"Preencha as duas senhas.",true); return; }
+    if(corpo.senha_nova.length<8){ msgConta(alvo,"A nova senha precisa de pelo menos 8 caracteres.",true); return; } }
+  msgConta(alvo,"Salvando…",false);
+  try{
+    var r=await apiFetch(API+"/auth/eu",{method:"PATCH",
+      headers:{"Content-Type":"application/json"}, body:JSON.stringify(corpo)});
+    var j=await r.json();
+    if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    USUARIO=j.usuario.nome; MEU_EMAIL=j.usuario.email; pintarUsuario();
+    if(j.refazer_login){
+      msgConta(alvo,"Alterado. Entre de novo com os dados novos.",false);
+      setTimeout(function(){ fecharPainel(); sair(true); }, 1600);
+    } else {
+      msgConta(alvo,"Alterado.",false);
+    }
+  }catch(e){ msgConta(alvo,String(e.message||e),true); }
+}
+function msgConta(id,txt,erro){
+  var e=el(id); if(!e) return;
+  e.textContent=txt; e.style.color = erro ? "var(--vermelho)" : "#15803d";
+}
+/* ── Equipe ──
+   Cadastro INTERNO: o endpoint exige token, entao so' quem ja' esta' dentro cria
+   conta nova. A tela de login nao tem "criar conta" de proposito. */
+async function irEquipe(){
+  el("view-home").style.display="none"; el("view-extract").style.display="none";
+  el("view-gpu").style.display="none"; el("view-vet").style.display="none"; el("view-equipe").style.display="block";
+  el("topbar-tit").textContent="Equipe"; setNav("equipe");
+  var bn=el("eq-btn-novo"); if(bn) bn.style.display = (CARGO==="admin") ? "" : "none";
+  formIntegrante(false); await carregarEquipe();
+}
+function formIntegrante(mostrar){
+  el("eq-form").style.display = mostrar ? "block" : "none";
+  if(mostrar){ el("eq-erro").textContent=""; el("eq-nome").focus(); }
+}
+async function carregarEquipe(){
+  var lista=el("eq-lista");
+  lista.innerHTML='<div class="md-vazio">Carregando...</div>';
+  try{
+    var r=await apiFetch(API+"/equipe");
+    if(!r.ok){ var e1=await r.json(); throw new Error(e1.detail||("HTTP "+r.status)); }
+    var eq=await r.json();
+    EQUIPE=eq;
+    el("eq-total").textContent=eq.length;
+    el("eq-admins").textContent=eq.filter(function(p){return p.role==="admin";}).length;
+    var cor={admin:["#166534","#dcfce7"],curador:["#1e40af","#dbeafe"],leitor:["#6b7280","#f3f4f6"]};
+    lista.innerHTML = eq.length ? eq.map(function(p){
+      var c=cor[p.role]||cor.leitor;
+      var ini=(p.name||"?").slice(0,2).toUpperCase();
+      var eu = (p.id===MEU_ID);
+      var acoes = (CARGO==="admin")
+        ? '<button class="eq-acao" onclick="editarIntegrante(\''+p.id+'\')">Editar</button>'+
+          (eu ? '' : '<button class="eq-acao perigo" onclick="removerIntegrante(\''+p.id+'\',\''+
+                     esc(p.name||"").replace(/'/g,"") + '\')">Remover</button>')
+        : '';
+      return '<div class="linha"><div style="display:flex;align-items:center;gap:12px;padding:14px 16px;flex:1">'+
+        '<div style="width:34px;height:34px;border-radius:50%;background:'+c[1]+';color:'+c[0]+
+        ';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px">'+esc(ini)+'</div>'+
+        '<div><div class="linha-tit">'+esc(p.name||"-")+(eu?' <span style="font-size:11px;color:var(--cinza)">(voce)</span>':'')+'</div>'+
+        '<div class="linha-meta">'+esc(String(p.id||"").slice(0,8))+'...</div></div></div>'+
+        '<div style="display:flex;align-items:center;gap:8px;padding-right:16px">'+acoes+
+        '<span class="mini-chip" style="background:'+c[1]+';color:'+c[0]+'">'+
+        esc(p.role||"leitor")+'</span></div></div>';
+    }).join("") : '<div class="md-vazio">Ninguem cadastrado.</div>';
+  }catch(e){
+    lista.innerHTML='<div class="md-vazio">Nao deu para listar: '+esc(String(e.message||e))+'</div>';
+  }
+}
+async function cadastrarIntegrante(){
+  var b=el("eq-salvar"), erro=el("eq-erro");
+  var corpo={ nome:el("eq-nome").value.trim(), email:el("eq-email").value.trim(),
+              senha:el("eq-senha").value, cargo:el("eq-cargo").value };
+  if(!corpo.email || !corpo.senha){ erro.textContent="E-mail e senha sao obrigatorios."; return; }
+  if(corpo.senha.length<8){ erro.textContent="A senha precisa de pelo menos 8 caracteres."; return; }
+  b.disabled=true; b.textContent="Cadastrando..."; erro.textContent="";
+  try{
+    var r=await apiFetch(API+"/equipe",{method:"POST",
+      headers:{"Content-Type":"application/json"}, body:JSON.stringify(corpo)});
+    var j=await r.json();
+    if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    el("eq-nome").value=""; el("eq-email").value=""; el("eq-senha").value="";
+    var bn=el("eq-btn-novo"); if(bn) bn.style.display = (CARGO==="admin") ? "" : "none";
+  formIntegrante(false); await carregarEquipe();
+    abrirPainel("Integrante cadastrado",
+      '<div style="font-size:13px;line-height:1.8"><b>'+esc(j.nome)+'</b> ('+esc(j.cargo)+')<br>'+
+      esc(j.email)+'</div>'+
+      '<div style="margin-top:12px;padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:12px;color:#7c2d12">'+
+      'Passe a senha provisoria por um canal seguro e peca para troca-la. '+
+      'Ela foi definida por voce e nao e enviada por e-mail.</div>');
+  }catch(e){ erro.textContent=String(e.message||e); }
+  finally{ b.disabled=false; b.textContent="Cadastrar"; }
+}
+/* ── Histórico e Configs ────────────────────────────────────────────────────
+   O histórico é o log do servidor: entrada/saída, alteração de documento e o
+   que entrou no acervo. O "ator" é o que a pessoa digitou no login — enquanto
+   a autenticação for protótipo, ele não prova identidade. */
+var USUARIO = null, CARGO = null, TOTAL_CURADORIA = 0;
+var EV_ROTULO = {
+  login:              ["entrou",                "#166534", "#dcfce7"],
+  logout:             ["saiu",                  "#7c2d12", "#ffedd5"],
+  documento_editado:  ["alterou documento",     "#1e40af", "#dbeafe"],
+  edicao_descartada:  ["descartou alteração",   "#7c2d12", "#ffedd5"],
+  pdf_ingerido:       ["PDF adicionado",        "#166534", "#dcfce7"],
+  pdf_removido:       ["PDF removido",          "#991b1b", "#fee2e2"]
+};
+async function anotar(evento, alvo, detalhe){
+  try{
+    await apiFetch(API+"/log", {method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({evento:evento, ator:USUARIO, alvo:alvo||null, detalhe:detalhe||null})});
+  }catch(e){ /* auditoria nunca atrapalha o uso */ }
+}
+function abrirPainel(titulo, html){
+  el("painel-tit").textContent=titulo; el("painel-corpo").innerHTML=html;
+  el("painel").style.display="flex";
+}
+function fecharPainel(){ el("painel").style.display="none"; }
+function _quando(iso){
+  if(!iso) return "—";
+  var d=new Date(iso);
+  return d.toLocaleDateString("pt-BR")+" "+d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+}
+function _nomeDoc(alvo){
+  if(!alvo) return "";
+  for(var i=0;i<IDX.length;i++){ if(IDX[i].id===alvo||IDX[i].slug===alvo)
+    return (IDX[i].meta && IDX[i].meta.titulo) || IDX[i].arquivo || alvo; }
+  return alvo;
+}
+async function abrirHistorico(){
+  abrirPainel("Histórico", '<div class="md-vazio">Carregando…</div>');
+  try{
+    var r=await apiFetch(API+"/log?limite=300");
+    if(!r.ok){
+      var t=await r.text();
+      abrirPainel("Histórico", '<div class="md-vazio">Não foi possível ler o histórico.<br><small>'+esc(t.slice(0,300))+'</small></div>');
+      return;
+    }
+    var itens=await r.json();
+    if(!itens.length){ abrirPainel("Histórico", '<div class="md-vazio">Nada registrado ainda.</div>'); return; }
+    var linhas=itens.map(function(l){
+      var m=EV_ROTULO[l.evento]||[l.evento,"#374151","#f3f4f6"];
+      var det="";
+      if(l.detalhe && l.detalhe.paginas && l.detalhe.paginas.length)
+        det="páginas "+l.detalhe.paginas.join(", ");
+      else if(l.detalhe && l.detalhe.paginas_pdf) det=l.detalhe.paginas_pdf+" páginas";
+      else if(l.detalhe) det=esc(JSON.stringify(l.detalhe).slice(0,70));
+      return '<tr><td style="white-space:nowrap">'+_quando(l.criado_em)+'</td>'+
+        '<td><span class="log-ev" style="color:'+m[1]+';background:'+m[2]+'">'+m[0]+'</span></td>'+
+        '<td>'+esc(l.ator||"—")+'</td>'+
+        '<td>'+esc(String(_nomeDoc(l.alvo)).slice(0,52))+'</td>'+
+        '<td style="color:var(--cinza)">'+det+'</td></tr>';
+    }).join("");
+    abrirPainel("Histórico — "+itens.length+" eventos",
+      '<table class="log-t"><thead><tr><th>Quando</th><th>Evento</th><th>Quem</th><th>Documento</th><th>Detalhe</th></tr></thead><tbody>'+linhas+'</tbody></table>');
+  }catch(e){
+    abrirPainel("Histórico", '<div class="md-vazio">Erro: '+esc(e.message)+'</div>');
+  }
+}
+async function abrirConfigs(){
+  var saude={};
+  try{ saude=await (await apiFetch(API+"/health")).json(); }catch(e){ saude={status:"sem resposta"}; }
+  var docs=IDX.length, pgs=IDX.reduce(function(a,d){return a+(d.n_paginas||0);},0);
+  function linha(k,v){ return '<div class="cfg-l"><span>'+k+'</span><b>'+esc(String(v))+'</b></div>'; }
+  abrirPainel("Configurações",
+    linha("Usuário da sessão", USUARIO||"—")+
+    linha("API", location.origin+API)+
+    linha("Estado do servidor", saude.status||"—")+
+    linha("Documentos no acervo", docs)+
+    linha("Páginas no acervo", pgs)+
+    linha("Limite de edições", "5 por minuto, por documento")+
+    linha("Limite de leituras", "5 por minuto, por documento")+
+    linha("Coleções do Qdrant", "escolhidas na aba Vetorização")+
+    '<div style="margin-top:14px;padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:12px;color:#7c2d12">'+
+    '<b>Autenticação é protótipo.</b> O login aceita qualquer usuário e senha e não protege nada. '+
+    'O campo "quem" do histórico registra o que foi digitado, não uma identidade verificada.</div>');
+}
+/* ── metadados ── */
+
+/* ── ABA LEGÍVEL (visual; o Markdown é o que vai pro vetor) ── */
+function latexLegivel(s){
+  s = String(s||'').replace(/```[a-z]*|```/g,'');
+  s = s.split('$$').join('').split('$').join('');
+  s = s.replace(/^#+\s*/gm,'').trim();
+  var M=[['\\cdot','·'],['\\times','×'],['\\pm','±'],['\\rightarrow','→'],['\\to','→'],
+         ['\\leq','≤'],['\\geq','≥'],['\\approx','≈'],['\\neq','≠'],['\\alpha','α'],
+         ['\\beta','β'],['\\gamma','γ'],['\\theta','θ'],['\\mu','µ'],['\\Delta','Δ'],
+         ['\\sum','Σ'],['\\sqrt','√'],['\\,',' '],['\\;',' '],['\\!',''],
+         ['\\left',''],['\\right',''],['\\%','%']];
+  M.forEach(function(pp){ s = s.split(pp[0]).join(pp[1]); });
+  s = s.replace(/\\text\{([^}]*)\}/g,'$1').replace(/\\mathrm\{([^}]*)\}/g,'$1');
+  s = s.replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g,'($1)/($2)');
+  s = s.replace(/\^\{([^}]*)\}/g,'<sup>$1</sup>').replace(/\^([\w+\-])/g,'<sup>$1</sup>');
+  s = s.replace(/_\{([^}]*)\}/g,'<sub>$1</sub>').replace(/_([\w+\-])/g,'<sub>$1</sub>');
+  s = s.replace(/\\(?![\\])[a-zA-Z]+/g,' ');  // remove comandos LaTeX residuais (\quad etc.)
+  s = s.split('\\\\').join('<br>');
+  s = s.split('{').join('').split('}').join('');
+  return s.trim();
+}
+/* converte LaTeX de reações químicas p/ legível (setas, cases, text, sub/sup) */
+function latexReacao(s){
+  s = String(s||'');
+  s = s.replace(/\\xrightarrow\s*(\{[^}]*\})?/g,' → ').replace(/\\xleftarrow\s*(\{[^}]*\})?/g,' ← ');
+  s = s.replace(/\\longrightarrow/g,' → ').replace(/\\longleftarrow/g,' ← ');
+  s = s.replace(/\\rightarrow/g,'→').replace(/\\leftarrow/g,'←').replace(/\\to\b/g,'→');
+  s = s.replace(/\\begin\{cases\}/g,' { ').replace(/\\end\{cases\}/g,' } ').replace(/\\\\/g,' ; ');
+  s = s.replace(/\\text\{([^}]*)\}/g,'$1').replace(/\\mathrm\{([^}]*)\}/g,'$1');
+  s = s.replace(/\\quad|\\;|\\,|\\!|\\left|\\right/g,' ');
+  s = s.replace(/\^\{([^}]*)\}/g,'<sup>$1</sup>').replace(/\^([\w+\-])/g,'<sup>$1</sup>');
+  s = s.replace(/_\{([^}]*)\}/g,'<sub>$1</sub>').replace(/_([\w+\-])/g,'<sub>$1</sub>');
+  s = s.replace(/\\[a-zA-Z]+/g,' ').replace(/[{}]/g,'');   // comandos/chaves residuais
+  return s.replace(/[ \t]{2,}/g,' ');
+}
+/* descrição de figura/gráfico legível: remove ![](img) e $ soltos, renderiza tabela (dedupe), converte LaTeX */
+function figLegivel(md){
+  var s = String(md||'');
+  s = s.replace(/!\[[^\]]*\]\([^)]*\)/g,'');                 // remove ![alt](img) fantasma
+  var tabs=[], vistos={};
+  s = s.replace(/<table[\s\S]*?<\/table>/g, function(m){
+    var k=m.replace(/\s+/g,''); if(vistos[k]) return '';     // tabela duplicada -> fora
+    vistos[k]=1; tabs.push(m); return ''+(tabs.length-1)+'';
+  });
+  s = s.replace(/#{1,6}\s*/g,'').replace(/\${1,2}/g,'');      // ### e $ delimitadores
+  s = latexReacao(s);
+  s = s.replace(/(\d+)/g, function(_,i){ return '<div class="leg-tabela">'+tabs[+i]+'</div>'; });
+  return s.replace(/\n{2,}/g,'<br><br>').replace(/\n/g,' ').trim();
+}
+
+function cropFig(pg, b){
+  /* Recorte de verdade quando existe: vem do PDF renderizado em alta, o mesmo
+     arquivo que a busca vai devolver junto do trecho. O caminho abaixo recorta
+     a imagem da pagina por CSS, que serve mas fica em ~500px de largura e nao
+     da' para ler rotulo de eixo. Ver scripts/gerar_figuras.py */
+  if(b.fig_url){
+    return '<div class="leg-fig"><img src="'+b.fig_url+'" alt="figura extraida" '
+         + 'style="max-width:100%;border:1px solid var(--borda);border-radius:6px;display:block"></div>';
+  }
+  const src = pg.img_url || pg.imgdata || ('data/'+IDX[docAtual].slug+'/'+pg.img);
+  const x0=b.bbox[0], y0=b.bbox[1], x1=b.bbox[2], y1=b.bbox[3];
+  const fw=x1-x0, fh=y1-y0;
+  const Wd = Math.min(400, fw*pg.w*0.95);
+  const FW = Wd/fw, FH = FW*pg.h/pg.w, Hd = fh*FH;
+  return '<div class="leg-fig"><div class="crop" style="width:'+Math.round(Wd)+'px;height:'+Math.round(Hd)+'px">'
+       + '<img src="'+src+'" style="width:'+Math.round(FW)+'px;height:'+Math.round(FH)+'px;left:'+Math.round(-x0*FW)+'px;top:'+Math.round(-y0*FH)+'px"></div></div>';
+}
+function tabelaOk(h){
+  if(!h || h.indexOf('</table>') < 0) return false;
+  if(h.indexOf('&lt;') >= 0 || h.indexOf('&gt;') >= 0) return false;   // tags escapadas = Chandra quebrou
+  var o=(h.match(/<td/g)||[]).length, c=(h.match(/<\/td>/g)||[]).length;
+  return Math.abs(o-c) <= 1;
+}
+function buildTable(cols, rows){
+  if(!cols || !cols.length){ cols = Object.keys(rows[0]||{}); }
+  var h='<div class="leg-tabela"><table><thead><tr>';
+  cols.forEach(function(c){ h += '<th>'+esc(c)+'</th>'; });
+  h += '</tr></thead><tbody>';
+  rows.forEach(function(r){
+    h += '<tr>';
+    cols.forEach(function(c){ h += '<td>'+esc(r[c]!=null?String(r[c]):'')+'</td>'; });
+    h += '</tr>';
+  });
+  return h + '</tbody></table></div>';
+}
+
+function renderLegivel(pg){
+  _pgAtual = pg;
+  const lay = DOCS[IDX[docAtual].slug];
+  const filtros = [["tudo","Tudo"],["texto","Texto"],["tabela","Tabelas"],["grafico","Gráficos"],["foto","Imagens"]];
+  var bar='<div class="leg-filtros">';
+  filtros.forEach(function(f){ bar+='<button class="leg-fchip'+(legFiltro===f[0]?" ativo":"")+'" onclick="setLegFiltro(\''+f[0]+'\')">'+f[1]+'</button>'; });
+  bar+='</div>';
+  // itens: página atual (Tudo) ou TODO o documento (por tipo)
+  var itens=[];
+  if(legFiltro==="tudo"){ (pg.blocos||[]).forEach(function(b){ itens.push({b:b,pg:pg,showPg:false}); }); }
+  else {
+    (lay.paginas||[]).forEach(function(pp){ (pp.blocos||[]).forEach(function(b){
+      var ok = (legFiltro==="texto") ? (b.tipo==="texto"||b.tipo==="formula") : (b.tipo===legFiltro);
+      if(ok) itens.push({b:b,pg:pp,showPg:true});
+    }); });
+  }
+  var body="";
+  if(!itens.length){ body='<div class="md-vazio">Nada deste tipo no documento.</div>'; }
+  else itens.forEach(function(it){
+    var b=it.b, pgx=it.pg;
+    var inner='<span class="leg-tag">'+(TAGS[b.tipo]||b.tipo)+(it.showPg?' · pág '+pgx.n:'')+'</span>';
+    if(b.tipo==="tabela"){
+      if(b.tabela_titulo) inner+='<div class="leg-cap">'+esc(b.tabela_titulo)+'</div>';
+      if(tabelaOk(b.tabela_html)) inner+='<div class="leg-tabela">'+b.tabela_html+'</div>';
+      else if(b.tabela_json && b.tabela_json.length) inner+=buildTable(b.tabela_colunas,b.tabela_json);
+      else inner+='<div class="leg-p">'+esc(b.md||"")+'</div>';
+    } else if(b.tipo==="formula"){
+      inner+='<div class="leg-formula">'+latexLegivel(b.md||"")+'</div>';
+    } else if(b.tipo==="grafico"||b.tipo==="foto"){
+      inner+=cropFig(pgx,b)+'<div class="desc">'+figLegivel(b.md||"")+'</div>';
+    } else {
+      inner+='<div class="leg-p">'+esc(b.md||"")+'</div>';
+    }
+    body+='<div class="leg-block'+(b._novo?' novo':'')+'" data-id="'+b.id+'">'+inner+'</div>';
+  });
+  el("res-legivel").innerHTML = bar + body;
+  ativarEdicaoLegivel();
+}
+function ativarEdicaoLegivel(){
+  el("res-legivel").querySelectorAll(".leg-block > .leg-p").forEach(function(cont){
+    cont.title="clique 2× para editar";
+    cont.addEventListener("dblclick",function(){
+      if(cont.getAttribute("contenteditable")==="true") return;
+      cont.setAttribute("contenteditable","true"); cont.focus();
+      var sel=window.getSelection(), r=document.createRange(); r.selectNodeContents(cont); sel.removeAllRanges(); sel.addRange(r);
+    });
+    cont.addEventListener("blur",function(){
+      cont.removeAttribute("contenteditable");
+      salvarEdicao(cont.parentNode.dataset.id, cont.innerText, "leg");
+    });
+    cont.addEventListener("keydown",function(e){ if(e.key==="Escape"||(e.key==="Enter"&&(e.ctrlKey||e.metaKey))){ e.preventDefault(); cont.blur(); } });
+  });
+}
+function renderMeta(d){
+  const lay=layoutDe(d.slug);
+  const m=d.meta, r=lay.resumo||d.resumo||{organicas:0,escaneadas:0,tabelas:0,figuras:0,formulas:0};
+  const kws=(m.palavras_chave||"").split(",").map(s=>s.trim()).filter(Boolean);
+  el("res-meta").innerHTML=`
+    <div class="meta-grid">
+      <span class="k">Título</span><span class="v" style="font-weight:700">${m.titulo}</span>
+      <span class="k">Autores</span><span class="v">${m.autores}</span>
+      <span class="k">Ano</span><span class="v">${m.ano}</span>
+      <span class="k">Periódico</span><span class="v">${m.periodico} · vol. ${m.volume}</span>
+      <span class="k">Tipo</span><span class="v">${m.tipo}</span>
+      <span class="k">DOI</span><span class="v"><code>${m.doi}</code></span>
+      <span class="k">Categoria</span><span class="v"><span class="cat">${m.categoria}</span></span>
+      <span class="k">Palavras-chave</span><span class="v"><span class="kw-wrap">${kws.map(k=>`<span class="kw">${k}</span>`).join("")}</span></span>
+    </div>
+    <hr class="meta-sep">
+    <div class="k" style="color:var(--cinza);font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px">Resultado do parser (DocLayout-YOLO + Chandra OCR)</div>
+    <div class="meta-stats">
+      <div class="meta-stat"><b>${d.n_paginas}</b><span>Páginas</span></div>
+      <div class="meta-stat"><b>${r.tabelas}</b><span>Tabelas</span></div>
+      <div class="meta-stat"><b>${r.figuras}</b><span>Figuras</span></div>
+      <div class="meta-stat"><b>${r.formulas}</b><span>Fórmulas</span></div>
+      <div class="meta-stat"><b>${r.organicas}</b><span>Orgânicas</span></div>
+      <div class="meta-stat"><b>${r.escaneadas}</b><span>Escaneadas</span></div>
+    </div>
+    <div class="v" style="font-size:11.5px;color:var(--cinza)">Origem: API de Curadoria (Squad 1) · <b style="color:var(--verde)">aprovado</b>. Cada bloco tem bounding box e markdown (${lay.paginas.reduce((s,p)=>s+(p.blocos?p.blocos.length:0),0)} blocos no total). Pronto para vetorização híbrida na collection <code style="font-family:'Roboto Mono'">sb100</code>.</div>`;
+}
+/* ── adicionar (botão direito no Markdown) / excluir bloco ── */
+function adicionarBlocoMD(afterId){
+  if(docAtual===null) return;
+  var pg=_pgAtual||paginasDoAtual()[paginaAtual-1]; if(!pg) return;
+  if(!pg.blocos) pg.blocos=[];
+  var novo={ tipo:"texto", md:"Novo trecho — clique 2× para editar", id:"add-"+Date.now(), bbox:null, _novo:true };
+  var idx=-1; if(afterId){ for(var i=0;i<pg.blocos.length;i++){ if(pg.blocos[i].id===afterId){ idx=i; break; } } }
+  if(idx>=0) pg.blocos.splice(idx+1,0,novo); else pg.blocos.push(novo);
+  renderMD(pg); renderLegivel(pg); persistir(pg);
+  setTimeout(function(){
+    var alvo=el("res-md").querySelector('.md-block[data-id="'+novo.id+'"] .md-content');
+    if(alvo){ alvo.scrollIntoView({block:"center"}); alvo.dispatchEvent(new MouseEvent("dblclick",{bubbles:true})); }
+  }, 30);
+}
+function excluirBloco(id){
+  if(docAtual===null||!id) return;
+  var pg=_pgAtual||paginasDoAtual()[paginaAtual-1];
+  var lay=DOCS[IDX[docAtual].slug], pgs=(lay&&lay.paginas)||[];
+  for(var i=0;i<pgs.length;i++){ var bs=pgs[i].blocos||[];
+    for(var j=0;j<bs.length;j++){ if(bs[j].id===id){ bs.splice(j,1); i=pgs.length; break; } } }
+  var ov=document.querySelector('#pdf-wrap .bbox[data-id="'+id+'"]'); if(ov) ov.remove();
+  renderMD(pg); renderLegivel(pg); persistir(pg);
+}
+function initMdCtx(){
+  if(window._mdCtxInit) return; window._mdCtxInit=true;
+  var menu=document.createElement("div"); menu.id="md-ctx"; menu.className="md-ctx"; document.body.appendChild(menu);
+  var alvoId=null;
+  el("res-md").addEventListener("contextmenu",function(e){
+    e.preventDefault();
+    var blk=e.target.closest(".md-block"); alvoId=blk?blk.dataset.id:null;
+    menu.innerHTML='<div class="mi" data-a="add">＋ Adicionar bloco'+(alvoId?" abaixo deste":"")+'</div>'
+                 +(alvoId?'<div class="mi del" data-a="del">🗑 Excluir este bloco</div>':'');
+    menu.style.left=Math.min(e.clientX,window.innerWidth-190)+"px";
+    menu.style.top=e.clientY+"px"; menu.style.display="block";
+  });
+  document.addEventListener("click",function(){ menu.style.display="none"; });
+  menu.addEventListener("click",function(e){
+    var a=e.target.getAttribute("data-a"); menu.style.display="none";
+    if(a==="add") adicionarBlocoMD(alvoId); else if(a==="del") excluirBloco(alvoId);
+  });
+}
+let legFiltro="tudo", _pgAtual=null, zoomLevel=100;
+function setLegFiltro(f){ legFiltro=f; if(_pgAtual) renderLegivel(_pgAtual); }
+function toggleMenu(e){ if(e) e.stopPropagation(); el("res-menu-drop").classList.toggle("on"); }
+function fecharMenu(){ var m=el("res-menu-drop"); if(m) m.classList.remove("on"); }
+document.addEventListener("click", fecharMenu);
+async function baixarPdf(){
+  fecharMenu();
+  /* Entrega o PDF ORIGINAL, do bucket. A versao anterior montava um PDF colando
+     as imagens de pagina (pp.imgdata), campo que existia quando o site lia
+     arquivos locais: hoje a API manda URL assinada e imgdata vem vazio, entao o
+     botao so' avisava "Sem paginas". Reconstruir tambem perdia a camada de
+     texto e inchava o arquivo. */
+  var d=IDX[docAtual];
+  try{
+    var r=await apiFetch(API+"/document/"+d.id+"/pdf");
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    var j=await r.json();
+    if(!j.url) throw new Error("sem url");
+    var a=document.createElement("a");
+    a.href=j.url; a.download=j.arquivo||(d.slug+".pdf"); a.target="_blank";
+    document.body.appendChild(a); a.click(); a.remove();
+  }catch(e){
+    alert("Nao foi possivel baixar o PDF: "+e.message);
+  }
+}
+var _SUPINV={'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','⁺':'+','⁻':'-','⁽':'(','⁾':')','ⁿ':'n','ⁱ':'i'};
+var _SUBINV={'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9','₊':'+','₋':'-','₍':'(','₎':')'};
+function paraLLM(t){ return String(t||"")
+  .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁽⁾ⁿⁱ]+/g,function(m){return '^{'+m.replace(/./g,function(c){return _SUPINV[c]||c;})+'}';})
+  .replace(/[₀₁₂₃₄₅₆₇₈₉₊₋₍₎]+/g,function(m){return '_{'+m.replace(/./g,function(c){return _SUBINV[c]||c;})+'}';}); }
+function baixarMd(){
+  fecharMenu();
+  const d=IDX[docAtual], lay=DOCS[d.slug];
+  let md="# "+(d.meta.titulo||d.arquivo)+"\n";
+  (lay.paginas||[]).forEach(function(pp){ md+="\n\n## Página "+pp.n+"\n\n"; (pp.blocos||[]).forEach(function(b){ md+=paraLLM(b.md||"")+"\n\n"; }); });
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([md],{type:"text/markdown;charset=utf-8"}));
+  a.download=d.slug+".md"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+}
+function _drow(k,v){ return '<div class="diag-row"><span>'+k+'</span><b>'+v+'</b></div>'; }
+function abrirDiag(){
+  fecharMenu();
+  const d=IDX[docAtual], lay=DOCS[d.slug], pgs=lay.paginas||[];
+  const rotas={}; pgs.forEach(function(pp){ var r=pp.rota||"?"; rotas[r]=(rotas[r]||0)+1; });
+  const tp={texto:0,tabela:0,grafico:0,foto:0,formula:0};
+  pgs.forEach(function(pp){ (pp.blocos||[]).forEach(function(b){ if(tp[b.tipo]!==undefined) tp[b.tipo]++; }); });
+  const tot=tp.texto+tp.tabela+tp.grafico+tp.foto+tp.formula;
+  const tempo = lay.tempo_s || ((rotas.chandra||0)*100 + (rotas.docling||0)*25);
+  const est = lay.tempo_s ? "" : " (estimado)";
+  el("diag-file").textContent = d.arquivo;
+  el("diag-body").innerHTML =
+    _drow("Tempo de extração", "≈ "+Math.round(tempo)+" s"+est) +
+    _drow("Páginas", d.n_paginas+"  (Docling "+(rotas.docling||0)+" · Chandra "+(rotas.chandra||0)+")") +
+    _drow("Blocos totais", tot) +
+    _drow("• Texto", tp.texto) + _drow("• Tabelas", tp.tabela) +
+    _drow("• Gráficos", tp.grafico) + _drow("• Fotos", tp.foto) + _drow("• Fórmulas", tp.formula);
+  el("diag-modal").style.display="flex";
+}
+function fecharDiag(){ el("diag-modal").style.display="none"; }
+function zoomPdf(delta){ zoomLevel=Math.max(50, Math.min(250, zoomLevel+delta)); aplicarZoom(); }
+function zoomReset(){ zoomLevel=100; aplicarZoom(); }
+function aplicarZoom(){ var w=el("pdf-wrap"); if(!w) return; w.style.maxWidth="none"; w.style.width=(620*zoomLevel/100)+"px"; var z=el("zoom-lbl"); if(z) z.textContent=zoomLevel+"%"; }
+
+function mostrarTab(q){
+  ["legivel","md","meta","code"].forEach(t=>{
+    el("tab-"+t).classList.toggle("ativo", q===t);
+    el("res-"+t).style.display = q===t ? "block" : "none";
+  });
+}
+
+/* ── hover sincronizado (overlay ↔ md), delegação 1x ── */
+let _hoverBound=false;
+function scrollTextoPara(id){
+  var pane, sel;
+  if(el("res-md").style.display !== "none"){ pane = el("res-md"); sel = '.md-block[data-id="'+id+'"]'; }
+  else if(el("res-legivel").style.display !== "none"){ pane = el("res-legivel"); sel = '.leg-block[data-id="'+id+'"]'; }
+  else return;
+  var blk = pane.querySelector(sel); if(!blk) return;
+  var top = blk.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop;
+  pane.scrollTo({ top: Math.max(0, top - pane.clientHeight/2 + blk.clientHeight/2), behavior:"smooth" });
+}
+function ligarHover(){
+  if(_hoverBound) return; _hoverBound=true;
+  function marcar(elx,on){
+    var bloco = elx.closest(".md-block,.leg-block,.bbox");
+    if(!bloco || bloco.dataset.id===undefined) return;
+    if(bloco.classList.contains("editando")) return;
+    var id = bloco.dataset.id;
+    document.querySelectorAll('.md-block[data-id="'+id+'"],.leg-block[data-id="'+id+'"],.bbox[data-id="'+id+'"]')
+            .forEach(function(e){ e.classList.toggle("hl", on); });
+    if(on){
+      if(bloco.classList.contains("bbox")){ scrollTextoPara(id); }                              // hover no PDF -> rola o TEXTO (ímã Ctrl+F)
+      else { var bx = document.querySelector('.bbox[data-id="'+id+'"]'); if(bx) scrollPdfPara(bx); }  // hover no texto -> rola o PDF
+    }
+  }
+  ["res-md","res-legivel","pdf-pane"].forEach(function(pid){
+    el(pid).addEventListener("mouseover", function(e){ marcar(e.target, true); });
+    el(pid).addEventListener("mouseout",  function(e){ marcar(e.target, false); });
+  });
+}
+function scrollPdfPara(bx){
+  const pane=el("pdf-pane"), wrap=el("pdf-wrap");
+  const alvo = wrap.offsetTop + bx.offsetTop - pane.clientHeight/2 + bx.clientHeight/2;
+  pane.scrollTo({top:Math.max(0,alvo),behavior:"smooth"});
+}
+
+/* ── vetorização (rodapé) ── */
+function resetVetFoot(i){
+  const btn=el("btn-vet"), live=el("vet-live"), ok=el("vet-ok");
+  btn.classList.remove("rodando"); btn.disabled=false; btn.style.display="flex";
+  btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M4 19h16"/></svg> Vetorizar';
+  live.innerHTML=""; live.style.display="flex"; ok.style.display="none";
+  // já estar numa coleção não impede de ir para outra: o botão continua
+  if(vetorizados.has(i)) ok.style.display="flex";
+}
+function vetorizar(){
+  // o botão do Analisar não vetoriza sozinho: falta escolher a coleção
+  if(docAtual===null) return;
+  irVetorizacao([IDX[docAtual].id]);
+}
+
+/* init */
+montarFiltros(); montarSituacoes();
+try{
+  HERO_ABERTO = sessionStorage.getItem("sb100_hero") === "1";
+  var _pp = sessionStorage.getItem("sb100_pp");
+  if(_pp !== null){ POR_PAGINA = parseInt(_pp,10)||0; MOSTRANDO = POR_PAGINA || 1e9;
+    var _s = el("por-pagina"); if(_s) _s.value = String(POR_PAGINA); }
+}catch(_){}
+aplicarHero();
+/* ── login (protótipo de front; validação real = backend) ── */
+/* ── sessao ──
+   O login era protótipo: aceitava qualquer coisa e não protegia nada. Agora vai
+   ao Supabase Auth pelo backend. Não existe auto-registro: quem entra e' quem
+   ja' foi cadastrado por alguem de dentro (aba Equipe). */
+var TOKEN = null;
+function apiFetch(url, opts){
+  opts = opts || {};
+  var h = Object.assign({}, opts.headers || {});
+  if(TOKEN) h["Authorization"] = "Bearer " + TOKEN;
+  opts.headers = h;
+  return fetch(url, opts).then(function(r){
+    if(r.status===401 && TOKEN){ sair(true); }   // sessao expirou
+    return r;
+  });
+}
+async function entrar(e){
+  if(e) e.preventDefault();
+  var email=(el("login-user").value||"").trim(), senha=(el("login-pass").value||"");
+  var erro=el("login-erro"), btn=document.querySelector(".login-btn");
+  if(!email || !senha){ erro.textContent="Preencha e-mail e senha."; return; }
+  erro.textContent=""; if(btn){ btn.disabled=true; btn.textContent="Entrando…"; }
+  try{
+    var r=await fetch(API+"/auth/login",{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({email:email, senha:senha})});
+    var j=await r.json();
+    if(!r.ok) throw new Error(j.detail||("HTTP "+r.status));
+    TOKEN=j.token; USUARIO=j.usuario.nome; CARGO=j.usuario.cargo||"leitor"; MEU_ID=j.usuario.id;
+    try{ sessionStorage.setItem("sb100_tok", TOKEN); }catch(_){}
+    MEU_EMAIL=j.usuario.email;
+    el("view-login").style.display="none";
+    pintarUsuario();
+    iniciar();
+  }catch(err){
+    erro.textContent = String(err.message||err);
+  }finally{ if(btn){ btn.disabled=false; btn.textContent="Entrar"; } }
+}
+async function sair(expirou){
+  if(!expirou) try{ await apiFetch(API+"/log",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({evento:"logout",ator:USUARIO})}); }catch(_){}
+  TOKEN=null; USUARIO=null; CARGO=null; MEU_EMAIL=null; fecharMenuConta();
+  try{ sessionStorage.removeItem("sb100_tok"); }catch(_){}
+  el("view-login").style.display="flex";
+  el("login-erro").textContent = expirou ? "Sua sessão expirou. Entre de novo." : "";
+  el("login-pass").value="";
+}
+
+async function iniciar(){
+  el("lista").innerHTML='<div class="md-vazio">Carregando documentos…</div>';
+  mostrarUltimaSync();
+  try{ await carregarDocumentos(); }
+  catch(e){
+    el("lista").innerHTML='<div class="md-vazio">Não foi possível falar com a API ('
+      +esc(e.message)+').<br>O servidor está no ar? <code>uvicorn api.main:app --reload</code></div>';
+    return;
+  }
+  irHome();
+}
+
+irHome();
+</script>
+
+<div id="painel" class="painel-overlay" style="display:none" onclick="if(event.target===this)fecharPainel()">
+  <div class="painel-card">
+    <div class="painel-cab"><b id="painel-tit"></b><span class="painel-x" onclick="fecharPainel()">✕</span></div>
+    <div id="painel-corpo" class="painel-corpo"></div>
+  </div>
+</div>
+</body>
+</html>

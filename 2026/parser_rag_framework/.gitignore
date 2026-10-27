@@ -1,0 +1,55 @@
+# ─────── Sistema operacional ───────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─────── Python ───────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# ─────── Node (caso o front evolua p/ build) ───────
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# ─────── Editores / IDE ───────
+.vscode/
+.idea/
+*.swp
+*~
+
+# ─────── Logs e temporários ───────
+*.log
+*.tmp
+*.bak
+*.bak.*
+
+# ─────── Artefatos de empacotamento ───────
+*.zip
+*.tar.gz
+
+# ─────── Segredos — NUNCA versionar ───────
+.env
+.env.*
+!.env.example
+*.token
+*_token*
+secrets*
+*.pem
+*.key
+
+# ─────── Claude Code (estado transitório) ───────
+.claude/worktrees/
+
+# demo local de antes do Supabase: os dados vivem no banco agora
+front/data/
