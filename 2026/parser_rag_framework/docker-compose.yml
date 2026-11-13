@@ -1,0 +1,84 @@
+# Sobe o site em HTTPS no servidor, pronto para o Cloudflare apontar o domínio.
+#
+#   cp .env.example .env    # e preencha
+#   docker compose up -d --build
+#
+# O Supabase NÃO está aqui de propósito: a API fala com o Supabase Cloud pelas
+# variáveis do .env. Trocar para um Supabase local depois é trocar SUPABASE_URL,
+# não refazer isto. Ver docs/deploy.md.
+
+services:
+  api:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # fecha /api/fila e o heartbeat: só quem manda X-Worker-Token entra.
+      # Sem esta variável eles ficam ABERTOS (/api/health denuncia).
+      WORKER_TOKEN: ${WORKER_TOKEN:?defina WORKER_TOKEN no .env}
+    expose:
+      - "8000"
+    ports:
+      # Publicada porque o cloudflared da casa aponta para IP físico em HTTP
+      # simples, com o TLS terminando no Cloudflare. Sem isto ele teria de
+      # falar com o caddy por HTTPS e ignorar o certificado interno, que é o
+      # oposto do padrão que os outros serviços daqui já seguem.
+      #
+      # Fica na rede interna do servidor, que não tem IP público. Todo endpoint
+      # exige login; só /api/health responde sem token.
+      - "${API_PORTA:-8000}:8000"
+    networks: [sb100]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # DOMINIO aceita lista ("ip, ip, dominio"); SNI_PADRAO é um nome só,
+      # usado quando o cliente não manda SNI (quem acessa por IP não manda)
+      DOMINIO: ${DOMINIO:-localhost}
+      SNI_PADRAO: ${SNI_PADRAO:-localhost}
+    volumes:
+      # Caddyfile.interno (padrão) sobe HTTPS com certificado do próprio Caddy,
+      # sem depender de ninguém. Quando o Origin Certificate chegar, troque para
+      # CADDYFILE=Caddyfile.origem no .env e reinicie — sem rebuild.
+      - ./deploy/${CADDYFILE:-Caddyfile.interno}:/etc/caddy/Caddyfile:ro
+      - ./deploy/certs:/etc/caddy/certs:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [sb100]
+
+  # Só sobe com `--profile tunel`. O servidor não tem IP público (as interfaces
+  # são todas privadas ou ZeroTier), então não há para onde um registro DNS
+  # apontar: o túnel sai de dentro para fora e resolve isso sem abrir porta.
+  #
+  # Quem administra a zona cria o túnel no Cloudflare Zero Trust, aponta o
+  # hostname público para `http://api:8000` e entrega o TUNNEL_TOKEN.
+  # Com o túnel, o caddy fica dispensável — quem termina TLS é o Cloudflare.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    profiles: [tunel]
+    command: tunnel --no-autoupdate run
+    environment:
+      # `:-` e não `:?`: o Compose interpola o arquivo TODO antes de olhar os
+      # perfis, então a forma obrigatória quebrava qualquer comando enquanto o
+      # token não existisse — inclusive `up api`, com o túnel desligado.
+      # Vazio aqui só falha quando alguém liga o perfil, que é quando importa.
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [sb100]
+
+networks:
+  sb100:
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,273 @@
+# Subir o site em HTTPS no servidor
+
+O combinado com quem administra o servidor: **a aplicação precisa estar de pé e
+respondendo em HTTPS antes de o domínio existir.** Só então ele aponta o
+Cloudflare para cá.
+
+## A decisão que encurta isto
+
+O Supabase **não** entra neste deploy. A API fala com o Supabase Cloud pelas
+variáveis do `.env`, exatamente como faz hoje na máquina do Nicolas.
+
+Isso separa duas coisas que estavam grudadas: colocar o site no ar é um dia de
+trabalho; self-hostar o Supabase é uma semana (sete contêineres, migrar dados,
+provar o esquema, assumir backup e atualização). Trazer o Supabase para casa
+depois é trocar `SUPABASE_URL` no `.env` e reiniciar — o `docker-compose.yml`
+não muda.
+
+Se a ordem fosse a inversa, o domínio ficaria esperando a parte difícil.
+
+## O que sobe
+
+```
+  navegador ──► Cloudflare ──► cloudflared ──► api:8010   (domínio)
+  navegador ──────────────────► caddy :443 ──► api:8000   (ZeroTier)
+```
+
+Dois caminhos, de propósito. Pelo domínio, o TLS termina no Cloudflare e o
+`cloudflared` fala HTTP com a API: é o padrão que o servidor já usa nos outros
+serviços. Pelo ZeroTier, o caddy serve HTTPS com certificado interno, o que
+mantém o acesso da equipe funcionando sem depender do domínio.
+
+Os cabeçalhos de segurança ficam na aplicação, não no caddy, porque no primeiro
+caminho ele não está no meio.
+
+## Certificado — não espere por ele
+
+**Dá para subir hoje, sem certificado e sem domínio.** É o padrão do compose: o
+`Caddyfile.interno` usa um certificado que o próprio Caddy gera. A aplicação
+fica de pé em HTTPS e você prova que responde. O navegador reclama se você
+acessar a origem direto — esperado, ninguém assinou aquilo — mas o Cloudflare em
+modo **Full** aceita origem assim.
+
+Quando o **Origin Certificate** chegar, é trocar uma linha no `.env`:
+
+```
+CADDYFILE=Caddyfile.origem
+```
+
+e `docker compose up -d`. Sem rebuild, sem downtime relevante. Aí dá para ligar
+**Full (strict)**.
+
+O certificado sai do painel da zona (SSL/TLS → Origin Server → Create
+Certificate), vale 15 anos e é grátis. **Quem tem a zona emite** — nós não temos
+o domínio. Peça `origin.pem` e `origin.key` e ponha em `deploy/certs/`.
+
+Não use Let's Encrypt: ele exige o domínio já apontando para este servidor, e a
+ordem combinada é a inversa.
+
+> **Alternativa que dispensa certificado de vez:** um túnel `cloudflared`. A
+> origem serve HTTP, o túnel sai de dentro para fora e **nenhuma porta de entrada
+> é aberta no servidor**. Mais simples e mais seguro que abrir a 443, e o
+> `caddy` sai do compose. Vale perguntar — ele é quem conhece o padrão da casa.
+
+## Chegando pelo ZeroTier
+
+Se o servidor está numa rede ZeroTier, dá para subir e testar **sem domínio,
+sem Cloudflare e sem abrir porta nenhuma para a internet**. É o melhor jeito de
+provar que funciona antes de pedir qualquer coisa a quem administra.
+
+O detalhe que morde: o Caddy só responde para o hostname que está no `.env`.
+Com `DOMINIO=localhost`, acessar `https://10.147.20.5` de outra máquina não casa
+com nenhum site e o Caddy devolve erro. Ponha o IP ZeroTier do servidor:
+
+```bash
+DOMINIO=10.147.20.5
+```
+
+O Caddy emite certificado interno para endereço IP, então isso funciona.
+
+> Existe a forma `DOMINIO=:443`, que responde a qualquer nome ou IP. **Não use
+> junto com `tls internal`**: sem um nome, o emissor interno não tem para quem
+> emitir, e não deu para testar aqui o que o Caddy faz nesse caso. Com o
+> certificado de origem (`Caddyfile.origem`) o `:443` é seguro, porque o
+> certificado já vem pronto.
+
+Quando o domínio real entrar, troque pelo hostname — aí o Caddy passa a recusar
+acesso por outro nome, que é o que se quer em produção.
+
+O navegador vai avisar do certificado; é o certificado interno do Caddy, e o
+aviso é esperado. Para confirmar por linha de comando:
+
+```bash
+curl -k https://10.147.20.5/api/health
+```
+
+> Chegar pelo ZeroTier também reforça a opção do túnel `cloudflared`: se ninguém
+> precisa alcançar o servidor pela internet, não há motivo para abrir a 443.
+
+## Passo a passo
+
+```bash
+git clone https://github.com/nicolasaws1/parser_rag_framework.git
+cd parser_rag_framework
+cp .env.example .env
+```
+
+Preencha o `.env`:
+
+| variável | de onde vem |
+|---|---|
+| `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | painel do Supabase |
+| `CURATION_API_URL`, `CURATION_API_USER`, `CURATION_API_PASSWORD` | API de curadoria |
+| `WORKER_TOKEN` | invente uma string longa: `openssl rand -hex 32` |
+| `DOMINIO` | o hostname que ele vai apontar |
+
+`WORKER_TOKEN` é obrigatório no compose — ele se recusa a subir sem. É o que
+fecha `/api/fila` e o heartbeat, que hoje aceitam qualquer chamada.
+
+`DOMINIO` pode ficar `localhost` enquanto o domínio não existir, e `CADDYFILE`
+pode ficar no padrão. Nada disso impede de subir:
+
+```bash
+docker compose up -d --build
+```
+
+## Conferir
+
+**Antes de sair da sua máquina**, sem precisar de Docker:
+
+```bash
+python scripts/checar_deploy.py
+```
+
+Ele resolve as referências do compose, copia para uma pasta limpa exatamente o
+que o `Dockerfile` copia e prova que `api.main` importa só com aquilo, confere
+que toda variável lida pelo código está no `.env.example`, e que nem `.env` nem
+a chave privada escapam para a imagem ou para o repositório.
+
+**No servidor, depois do `up`:**
+
+```bash
+curl -k https://localhost/api/health
+```
+
+Tem de responder `{"status":"ok","supabase":"ok","worker_protegido":true}`. Se
+`worker_protegido` vier `false`, o `WORKER_TOKEN` não chegou ao contêiner.
+
+Os scripts de conferência estão dentro da imagem — não é preciso Python no
+host:
+
+```bash
+docker compose exec api python scripts/checar_tudo.py
+```
+
+Seis blocos: guardas de acesso, endpoints sem token, `X-Worker-Token`, RLS,
+acervo e órfãos.
+
+Falta um caminho que nenhum dos dois cobre, o do login de verdade. Esse pede a
+senha a quem está rodando:
+
+```bash
+docker compose exec api python scripts/testar_acesso.py --api http://localhost:8000
+```
+
+Só depois de os três passarem é que faz sentido pedir o domínio.
+
+## Colocar num domínio (`sb100.optin.com.br`)
+
+**O servidor não tem IP público.** As interfaces são `172.26.0.10` (privada) e
+duas de ZeroTier. Um registro DNS não tem para onde apontar, então abrir a 443
+não resolve: o caminho é o **túnel `cloudflared`**.
+
+O que quem administra a zona precisa fazer, no Cloudflare Zero Trust:
+
+1. Criar um túnel (Networks → Tunnels → Create).
+2. Public hostname: `sb100.optin.com.br` → Service `HTTP` → URL `api:8000`.
+3. Entregar o **token do túnel**.
+
+Do nosso lado é uma linha no `.env` e um comando:
+
+```bash
+echo "TUNNEL_TOKEN=<o token>" >> .env
+```
+
+```bash
+sudo docker compose --profile tunel up -d
+```
+
+O `cloudflared` só sobe com esse perfil, então nada muda enquanto o token não
+existir. Com o túnel no ar, **o `caddy` fica dispensável** — quem termina TLS é
+o Cloudflare, e os cabeçalhos de segurança vivem na aplicação, não no proxy:
+
+```bash
+sudo docker compose stop caddy
+```
+
+Mantê-lo de pé também funciona e continua servindo o acesso por ZeroTier.
+
+## A porta da API no host
+
+O `cloudflared` da casa aponta para **IP físico em HTTP**, com o TLS terminando
+no Cloudflare. Por isso a API publica uma porta (`API_PORTA`, padrão 8000) em
+vez de ficar só atrás do caddy.
+
+O servidor hospeda outras squads, e **8000 já estava ocupada** por outro
+serviço. Pior que o erro: enquanto o contêiner não subia, `curl
+http://<ip>:8000/api/health` respondia `{"detail":"Not Found"}` — resposta da
+aplicação alheia, que parece nossa. Antes de escolher a porta:
+
+```bash
+ss -ltn | awk 'NR>1{print $4}' | grep -oE '[0-9]+$' | sort -n | uniq
+```
+
+Em produção ficou `API_PORTA=8010`.
+
+## O que mordeu no primeiro deploy (2026-08-15)
+
+Ficou de pé no servidor `sb100`, com Docker snap e sudo restrito a
+`/snap/bin/docker`. Três coisas surpreenderam:
+
+**Bind mount do snap funcionou.** A previsão era que o Docker snap não montasse
+arquivo de `/home/sb100/squad2` (home aninhado, e o confinamento só enxerga
+`/home/<usuário>`). Monta. Nenhuma mudança foi necessária.
+
+**TLS por IP quebra sem `default_sni`.** Cliente que acessa `https://<IP>` não
+manda SNI: o `ClientHello` chega com `server_name` vazio, o Caddy não escolhe
+certificado e derruba com `tlsv1 alert internal error` — mesmo tendo emitido o
+certificado certo, e o log dizendo `certificate obtained successfully`. Vale
+para curl e navegador. Resolvido no bloco global dos dois Caddyfiles.
+
+**`docker compose up -d` não recarrega o Caddyfile.** O arquivo é montado, então
+mudar o conteúdo não muda a definição do contêiner e o Compose deixa como está,
+informando `Running`. Depois de editar o Caddyfile:
+
+```bash
+sudo docker compose restart caddy
+```
+
+## Se o contêiner reiniciar em laço
+
+```bash
+docker compose logs api --tail 30
+```
+
+Faltar variável no `.env` é a causa mais provável, e a aplicação diz qual:
+`Faltam variáveis de ambiente: ...`.
+
+## Depois que o domínio subir
+
+O notebook de extração precisa passar a mandar `X-Worker-Token` ao consultar
+`/api/fila` e ao bater heartbeat — senão a fila para de ser vista pelo lado GPU.
+É a única coisa que quebra com o `WORKER_TOKEN` ligado, e quebra em silêncio.
+
+## O que foi testado sem Docker, e o que não dá para testar sem ele
+
+Não há Docker na máquina de desenvolvimento. Estas partes foram verificadas
+uma a uma, fora do contêiner:
+
+| verificado | resultado |
+|---|---|
+| todo pacote tem wheel manylinux cp312 | sim — nada compila, `python:3.12-slim` basta sem `gcc` |
+| `pymupdf` precisa de biblioteca do sistema | não — a wheel é `abi3` manylinux_2_28 e a base tem glibc 2.36 |
+| o `CMD` sobe a aplicação | sim |
+| o `HEALTHCHECK` devolve 0 com a API viva | sim |
+| `WORKER_TOKEN` fecha `/api/fila` e o heartbeat | sim — 5 casos: sem token, token errado e token certo |
+| `/api/health` reflete o token | sim — `worker_protegido: true` |
+| YAML do compose | válido |
+| chave privada fora do git e da imagem | `.gitignore` e `.dockerignore` cobrem |
+
+**O que só o servidor prova:** a montagem dos volumes, a rede entre `caddy` e
+`api`, o `depends_on: service_healthy`, e o certificado sendo aceito. Nenhum
+deles depende de código nosso — se falharem, falham no `up`, com mensagem
+clara, e não em produção.
